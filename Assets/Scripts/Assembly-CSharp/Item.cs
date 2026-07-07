@@ -77,12 +77,17 @@ public class Item : MainItem
 		{
 			addInfo(T.khoagiaodich, 3);
 		}
-		if (LvUpgrade >= 11 && LvUpgrade <= 15 && typeSpec != 1)
+		if (LvUpgrade >= 11 && LvUpgrade <= 17 && typeSpec != 1)
 		{
 			addInfo(T.thongtinfullset, 5, infoShow.HARDCODE_PAINT_CENTER);
 			sbyte color = 7;
-			addInfo(T.fullset + LvUpgrade, color, (sbyte)(90 + LvUpgrade));
-			for (int j = 0; j < LvUpgrade - 10; j++)
+			addInfo(T.fullset + LvUpgrade, color, (sbyte)(90 + (LvUpgrade > 15 ? 15 : LvUpgrade)));
+			int limit = LvUpgrade - 10;
+			if (limit > 5)
+			{
+				limit = 5;
+			}
+			for (int j = 0; j < limit; j++)
 			{
 				sbyte b = (sbyte)(101 + j);
 				if (b > 105)
@@ -95,6 +100,20 @@ public class Item : MainItem
 					addInfo(T.mFullSet[j + 1], color, b);
 				}
 			}
+		}
+		if (LvUpgrade >= 16 && typeSpec != 1)
+		{
+			addInfo("--- Chỉ số Full Set +16 ---", 5, infoShow.HARDCODE_PAINT_CENTER);
+			addInfo(T.fullset16_dame, 7, 105);
+			addInfo(T.fullset16_hp, 7, 105);
+			addInfo(T.fullset16_all, 7, 105);
+		}
+		if (LvUpgrade >= 17 && typeSpec != 1)
+		{
+			addInfo("--- Chỉ số Full Set +17 ---", 5, infoShow.HARDCODE_PAINT_CENTER);
+			addInfo(T.fullset17_dame, 7, 105);
+			addInfo(T.fullset17_hp, 7, 105);
+			addInfo(T.fullset17_all, 7, 105);
 		}
 		addInfo(T.thongtinchiso, 5, infoShow.HARDCODE_PAINT_CENTER_CHI_SO);
 		for (int k = 0; k < mInfoItem.Length; k++)
@@ -152,7 +171,7 @@ public class Item : MainItem
 		return mVector2;
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector obj = new mVector();
 		obj.addElement(TabShop.cmdBuyItem);

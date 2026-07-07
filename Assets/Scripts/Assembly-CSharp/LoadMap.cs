@@ -342,16 +342,24 @@ public class LoadMap
 		{
 			num4 = mapH;
 		}
-		if ((imgTileWater == null || imgTileWater.img == null) && !GameCanvas.lowGraphic)
+		if ((imgTileWater == null || imgTileWater.img == null || imgTileWater.img.image == null || imgTileWater.img.image.texture == null) && !GameCanvas.lowGraphic)
 		{
 			imgTileWater = ObjectData.getImageOther((short)idTile, 70);
 		}
-		if (imgTile == null || imgTile.img == null)
+		else if (imgTileWater != null)
+		{
+			imgTileWater.count = GameCanvas.timeNow / 1000;
+		}
+		if (imgTile == null || imgTile.img == null || imgTile.img.image == null || imgTile.img.image.texture == null)
 		{
 			imgTile = ObjectData.getImageOther((short)idTile, 20);
 			g.setColor(15445332);
 			g.fillRect(MainScreen.cameraMain.xCam, MainScreen.cameraMain.yCam, MotherCanvas.w, MotherCanvas.h);
 			return;
+		}
+		else
+		{
+			imgTile.count = GameCanvas.timeNow / 1000;
 		}
 		for (int i = num; i < num3; i++)
 		{

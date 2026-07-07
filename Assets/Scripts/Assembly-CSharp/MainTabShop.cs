@@ -12,7 +12,7 @@ public class MainTabShop : MainTab
 
 	public static bool isUpdateItemShip = false;
 
-	public sbyte typeNPCShop;
+	public short typeNPCShop;
 
 	public iCommand cmdMenu;
 

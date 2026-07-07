@@ -19,7 +19,7 @@ public class ItemHead : MainItem
 		MainObject.paintOnePart(g, value, 5, x, y, 2);
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector mVector2 = new mVector();
 		if (price == 0 && priceRuby == 0)

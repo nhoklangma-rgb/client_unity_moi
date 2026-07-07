@@ -42,11 +42,11 @@ public class Interface_Game
 
 	public static FrameImage fraBorderNoti4;
 
-	public static int[][] mPosKillCur = mSystem.new_M_Int(6, 2);
+	public static int[][] mPosKillCur = mSystem.new_M_Int(7, 2);
 
-	public static int[][] mPosKillBuff = mSystem.new_M_Int(6, 2);
+	public static int[][] mPosKillBuff = mSystem.new_M_Int(7, 2);
 
-	public static int[][] mPosKillSub = mSystem.new_M_Int(6, 2);
+	public static int[][] mPosKillSub = mSystem.new_M_Int(7, 2);
 
 	public static int[][] mPosMove = mSystem.new_M_Int(4, 2);
 
@@ -54,15 +54,15 @@ public class Interface_Game
 
 	public static int[][] mSizeImgOther = mSystem.new_M_Int(6, 2);
 
-	public static int[][] mVChangTab = mSystem.new_M_Int(6, 2);
+	public static int[][] mVChangTab = mSystem.new_M_Int(7, 2);
 
-	public static int[][] mPosEffCurrent = mSystem.new_M_Int(12, 2);
+	public static int[][] mPosEffCurrent = mSystem.new_M_Int(14, 2);
 
 	public int[] mKeyMove = new int[4] { 4, 6, 2, 8 };
 
 	private int[] mRotateMove = new int[4] { 2, 0, 3, 1 };
 
-	public static int[] mValueHotKey = new int[6] { 1, 3, 5, 7, 9, 0 };
+	public static int[] mValueHotKey = new int[7] { 1, 3, 5, 2, 7, 9, 0 };
 
 	public static short[][] mValueLoL = new short[9][]
 	{
@@ -708,6 +708,57 @@ public class Interface_Game
 		if (timeChangeTab > 0)
 		{
 			paintChangTab(g);
+		}
+		{
+			int wBtn = 36;
+			int hBtn = 14;
+			int x1, y1, x2, y2, x3, y3, x4, y4;
+
+			if (typeTouch == 1)
+			{
+				int xBtn = MotherCanvas.w - 40;
+				x1 = xBtn; y1 = 45;
+				x2 = xBtn; y2 = 61;
+				x3 = xBtn; y3 = 77;
+				x4 = xBtn; y4 = 93;
+			}
+			else
+			{
+				int yRow = MotherCanvas.h - 18;
+				int xCenter = MotherCanvas.hw;
+				x1 = xCenter - 57; y1 = yRow;
+				x2 = xCenter - 18; y2 = yRow;
+				x3 = xCenter + 21; y3 = yRow;
+				x4 = xCenter + 60; y4 = yRow;
+			}
+
+			// Button 1: TS
+			g.setColor(HAIRMOD.mAuto.Instance.isTanSat ? 0x00FF00 : 0x555555);
+			g.fillRect(x1, y1, wBtn, hBtn);
+			g.setColor(0xFFFFFF);
+			g.drawRect(x1, y1, wBtn, hBtn);
+			mFont.tahoma_7b_white.drawString(g, "TS", x1 + wBtn / 2, y1 + 1, mFont.CENTER);
+
+			// Button 2: GM
+			g.setColor(HAIRMOD.mAuto.Instance.isGomQuai ? 0x00FF00 : 0x555555);
+			g.fillRect(x2, y2, wBtn, hBtn);
+			g.setColor(0xFFFFFF);
+			g.drawRect(x2, y2, wBtn, hBtn);
+			mFont.tahoma_7b_white.drawString(g, "GM", x2 + wBtn / 2, y2 + 1, mFont.CENTER);
+
+			// Button 3: Tele
+			g.setColor(0x0088FF);
+			g.fillRect(x3, y3, wBtn, hBtn);
+			g.setColor(0xFFFFFF);
+			g.drawRect(x3, y3, wBtn, hBtn);
+			mFont.tahoma_7b_white.drawString(g, "Tele", x3 + wBtn / 2, y3 + 1, mFont.CENTER);
+
+			// Button 4: RB
+			g.setColor(0x8B008B); // DarkMagenta
+			g.fillRect(x4, y4, wBtn, hBtn);
+			g.setColor(0xFFFFFF);
+			g.drawRect(x4, y4, wBtn, hBtn);
+			mFont.tahoma_7b_white.drawString(g, "RB", x4 + wBtn / 2, y4 + 1, mFont.CENTER);
 		}
 	}
 
@@ -1756,6 +1807,67 @@ public class Interface_Game
 	{
 		isMove = true;
 		updateShowTime();
+		{
+			int wBtn = 36;
+			int hBtn = 14;
+			int x1, y1, x2, y2, x3, y3, x4, y4;
+
+			if (typeTouch == 1)
+			{
+				int xBtn = MotherCanvas.w - 40;
+				x1 = xBtn; y1 = 45;
+				x2 = xBtn; y2 = 61;
+				x3 = xBtn; y3 = 77;
+				x4 = xBtn; y4 = 93;
+			}
+			else
+			{
+				int yRow = MotherCanvas.h - 18;
+				int xCenter = MotherCanvas.hw;
+				x1 = xCenter - 57; y1 = yRow;
+				x2 = xCenter - 18; y2 = yRow;
+				x3 = xCenter + 21; y3 = yRow;
+				x4 = xCenter + 60; y4 = yRow;
+			}
+
+			if (GameCanvas.isPoint(x1, y1, wBtn, hBtn))
+			{
+				if (GameCanvas.isPointerSelect)
+				{
+					GameCanvas.isPointerSelect = false;
+					HAIRMOD.mAuto.Instance.setToggleTanSat();
+				}
+				isMove = false;
+			}
+			else if (GameCanvas.isPoint(x2, y2, wBtn, hBtn))
+			{
+				if (GameCanvas.isPointerSelect)
+				{
+					GameCanvas.isPointerSelect = false;
+					HAIRMOD.mAuto.Instance.setToggleGomQuai();
+				}
+				isMove = false;
+			}
+			else if (GameCanvas.isPoint(x3, y3, wBtn, hBtn))
+			{
+				if (GameCanvas.isPointerSelect)
+				{
+					GameCanvas.isPointerSelect = false;
+					Interface_Game.addInfoPlayerNormal("Đang gọi UseTeleportStone()...", mFont.tahoma_7_yellow);
+					HAIRMOD.mAuto.Instance.UseTeleportStone();
+				}
+				isMove = false;
+			}
+			else if (GameCanvas.isPoint(x4, y4, wBtn, hBtn))
+			{
+				if (GameCanvas.isPointerSelect)
+				{
+					GameCanvas.isPointerSelect = false;
+					GlobalService.gI().shop_NPC(-100);
+				}
+				isMove = false;
+			}
+		}
 		for (int i = 0; i < mPosOther.Length; i++)
 		{
 			if ((i != 2 || !GameCanvas.loadmap.mapLang() || timePaintIconSkill > 0) && (i != 5 || GameScreen.player.clan != null) && GameCanvas.isPoint(mPosOther[i][0] - 2, mPosOther[i][1] - 2, mSizeImgOther[i][0] + 4, mSizeImgOther[i][1] + 4))
@@ -2212,7 +2324,7 @@ public class Interface_Game
 					{
 						mPosKillCur[i][0] = xBeginKill + CRes.getcos(CRes.fixangle(num)) * lSkill / 1000;
 						mPosKillCur[i][1] = yBeginKill + CRes.getsin(CRes.fixangle(num)) * lSkill / 1000;
-						num -= 35;
+						num -= 30;
 					}
 					mPosKillBuff[i][0] = xBeginKill + CRes.getcos(CRes.fixangle(num2)) * (lSkill + 40) / 1000;
 					mPosKillBuff[i][1] = yBeginKill + CRes.getsin(CRes.fixangle(num2)) * (lSkill + 40) / 1000;
@@ -2226,13 +2338,13 @@ public class Interface_Game
 				{
 					mPosEffCurrent[j][0] = xBeginKill;
 					mPosEffCurrent[j][1] = yBeginKill + j * wSkill;
-					mPosEffCurrent[j + 6][0] = xBeginKill + wSkill / 2;
-					mPosEffCurrent[j + 6][1] = yBeginKill + j * wSkill;
+					mPosEffCurrent[j + 7][0] = xBeginKill + wSkill / 2;
+					mPosEffCurrent[j + 7][1] = yBeginKill + j * wSkill;
 				}
 			}
 			else if (typeTouch == 1)
 			{
-				xBeginKill = MotherCanvas.w - wSkill * 6 - wSkill / 2;
+				xBeginKill = MotherCanvas.w - wSkill * 7 - wSkill / 2;
 				yBeginKill = MotherCanvas.h - 24;
 				for (int k = 0; k < mPosKillCur.Length; k++)
 				{
@@ -2242,8 +2354,8 @@ public class Interface_Game
 					mPosKillSub[k][1] = MotherCanvas.h * 2 - mPosKillCur[k][1];
 					mPosEffCurrent[k][0] = xBeginKill + k * wSkill;
 					mPosEffCurrent[k][1] = yBeginKill - wSkill;
-					mPosEffCurrent[k + 6][0] = xBeginKill + k * wSkill;
-					mPosEffCurrent[k + 6][1] = yBeginKill - wSkill * 2 + 4;
+					mPosEffCurrent[k + 7][0] = xBeginKill + k * wSkill;
+					mPosEffCurrent[k + 7][1] = yBeginKill - wSkill * 2 + 4;
 				}
 				xBeginKill = wSkill / 2;
 				int num3 = wSkill;
@@ -2260,7 +2372,7 @@ public class Interface_Game
 		}
 		else
 		{
-			xBeginKill = MotherCanvas.hw - 70;
+			xBeginKill = MotherCanvas.hw - wSkill * 3;
 			yBeginKill = MotherCanvas.h - GameCanvas.hCommand - 5;
 			for (int m = 0; m < mPosKillCur.Length; m++)
 			{

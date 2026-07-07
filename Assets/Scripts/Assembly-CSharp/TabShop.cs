@@ -32,7 +32,7 @@ public class TabShop : MainTabShop
 
 	private short demhairEff;
 
-	public TabShop(string name, mVector vec, sbyte typeShop, int xTab)
+	public TabShop(string name, mVector vec, short typeShop, int xTab)
 		: base(name, vec, vec.size(), xTab)
 	{
 		typeNPCShop = typeShop;

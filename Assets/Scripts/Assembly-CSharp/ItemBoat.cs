@@ -51,7 +51,7 @@ public class ItemBoat : MainItem
 		}
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector mVector2 = new mVector();
 		if (price == 0 && priceRuby == 0)

@@ -1709,10 +1709,10 @@ public class ReadMessenge : AvMain
 			}
 			case 11:
 			{
-				sbyte b2 = msg.reader().readByte();
+				short b2 = msg.reader().readShort();
 				for (int m = 0; m < b2; m++)
 				{
-					MainMaterial mainMaterial = new MainMaterial(msg.reader().readByte(), msg.reader().readUTF(), msg.reader().readByte(), msg.reader().readByte(), msg.reader().readInt(), msg.reader().readShort(), msg.reader().readByte());
+					MainMaterial mainMaterial = new MainMaterial(msg.reader().readShort(), msg.reader().readUTF(), msg.reader().readByte(), msg.reader().readByte(), msg.reader().readInt(), msg.reader().readShort(), msg.reader().readByte());
 					MainItem.hashMaterialTem.put(mainMaterial.ID.ToString() ?? "", mainMaterial);
 				}
 				GlobalService.isGetMaterial = true;
@@ -3233,7 +3233,7 @@ public class ReadMessenge : AvMain
 		MainMaterial mainMaterial = null;
 		try
 		{
-			sbyte id = msg.reader().readByte();
+			short id = msg.reader().readShort();
 			short num = msg.reader().readShort();
 			MainMaterial mainMaterial2 = (MainMaterial)MainItem.hashMaterialTem.get(id.ToString() ?? "");
 			mainMaterial = new MainMaterial(7, id, mainMaterial2.name, mainMaterial2.typeMaterial, (sbyte)mainMaterial2.idIcon, num, mainMaterial2.price, mainMaterial2.priceRuby, mainMaterial2.isTrade);
@@ -4107,7 +4107,7 @@ public class ReadMessenge : AvMain
 	{
 		try
 		{
-			sbyte b = msg.reader().readByte();
+			short b = msg.reader().readShort();
 			string name = msg.reader().readUTF();
 			sbyte b2 = msg.reader().readByte();
 			short num = msg.reader().readShort();
@@ -5358,7 +5358,15 @@ public class ReadMessenge : AvMain
 				}
 				else
 				{
-					CatalogyMonster.LoadDataMon(SaveRms.loadData("dataMon"), isSave: false);
+					DataInputStream dataMon = SaveRms.loadData("dataMon");
+					if (dataMon != null)
+					{
+						CatalogyMonster.LoadDataMon(dataMon, isSave: false);
+					}
+					else
+					{
+						GlobalService.gI().get_DATA(15);
+					}
 				}
 				if (num2 != GlobalService.VerPotion)
 				{
@@ -5366,7 +5374,15 @@ public class ReadMessenge : AvMain
 				}
 				else
 				{
-					Potion.UpdateDataPotion(SaveRms.loadData("dataPotion"), isSave: false, 4);
+					DataInputStream dataPotion = SaveRms.loadData("dataPotion");
+					if (dataPotion != null)
+					{
+						Potion.UpdateDataPotion(dataPotion, isSave: false, 4);
+					}
+					else
+					{
+						GlobalService.gI().get_DATA(28);
+					}
 				}
 			}
 			else
@@ -5379,7 +5395,15 @@ public class ReadMessenge : AvMain
 			}
 			else
 			{
-				MainItem.LoadNameAttribute(SaveRms.loadData("dataAttri"), isSave: false);
+				DataInputStream dataAttri = SaveRms.loadData("dataAttri");
+				if (dataAttri != null)
+				{
+					MainItem.LoadNameAttribute(dataAttri, isSave: false);
+				}
+				else
+				{
+					GlobalService.gI().get_DATA(2);
+				}
 			}
 			msg.reader().readShort();
 			if (msg.reader().readShort() != GlobalService.VerNameMap)
@@ -5388,7 +5412,15 @@ public class ReadMessenge : AvMain
 			}
 			else
 			{
-				LoadMap.LoadNameMap(SaveRms.loadData("dataNameMap"), isSave: false);
+				DataInputStream dataNameMap = SaveRms.loadData("dataNameMap");
+				if (dataNameMap != null)
+				{
+					LoadMap.LoadNameMap(dataNameMap, isSave: false);
+				}
+				else
+				{
+					GlobalService.gI().get_DATA(6);
+				}
 			}
 			if (msg.reader().readShort() != GlobalService.VerNamePotionQuest)
 			{
@@ -5396,7 +5428,15 @@ public class ReadMessenge : AvMain
 			}
 			else
 			{
-				MainQuest.LoadNamePotionQuest(SaveRms.loadData("dataNamePotionquest"), isSave: false);
+				DataInputStream dataQuest = SaveRms.loadData("dataNamePotionquest");
+				if (dataQuest != null)
+				{
+					MainQuest.LoadNamePotionQuest(dataQuest, isSave: false);
+				}
+				else
+				{
+					GlobalService.gI().get_DATA(7);
+				}
 			}
 			msg.reader().readShort();
 			short num3 = msg.reader().readShort();
@@ -5404,7 +5444,7 @@ public class ReadMessenge : AvMain
 			{
 				if (GlobalService.VerImageSave != -1)
 				{
-					GameMidlet.delRMS();
+					try { GameMidlet.delRMS(); } catch (Exception) { }
 				}
 				GlobalService.VerImageSave = num3;
 				SaveRms.saveVer(GlobalService.VerImageSave, "VerdataImageSave");
@@ -5415,7 +5455,15 @@ public class ReadMessenge : AvMain
 			}
 			else
 			{
-				MainDataUpgrade.LoadDataUpgrade(SaveRms.loadData("dataUpgradeSave"), isSave: false);
+				DataInputStream dataUpgrade = SaveRms.loadData("dataUpgradeSave");
+				if (dataUpgrade != null)
+				{
+					MainDataUpgrade.LoadDataUpgrade(dataUpgrade, isSave: false);
+				}
+				else
+				{
+					GlobalService.gI().get_DATA(12);
+				}
 			}
 			if (msg.reader().readShort() != GlobalService.verPotionClan)
 			{
@@ -5423,7 +5471,15 @@ public class ReadMessenge : AvMain
 			}
 			else
 			{
-				Potion.UpdateDataPotion(SaveRms.loadData("dataPotionClan"), isSave: false, 8);
+				DataInputStream dataClan = SaveRms.loadData("dataPotionClan");
+				if (dataClan != null)
+				{
+					Potion.UpdateDataPotion(dataClan, isSave: false, 8);
+				}
+				else
+				{
+					GlobalService.gI().get_DATA(29);
+				}
 			}
 			LoginScreen.isCheckData = true;
 			GameCanvas.end_Dialog();
@@ -5436,8 +5492,20 @@ public class ReadMessenge : AvMain
 				GameCanvas.fristLoginScr.setNewAcc(isCheckDataOK: true);
 			}
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			mSystem.outz("Check_Data_Ver ERROR: " + ex.ToString());
+			// Vẫn cho login tiếp thay vì treo vĩnh viễn
+			LoginScreen.isCheckData = true;
+			GameCanvas.end_Dialog();
+			if (GameCanvas.currentScreen == GameCanvas.loginScr)
+			{
+				GameCanvas.loginScr.doLogin(isGetData: false, 0, GameCanvas.loginScr.tfUser.getText(), GameCanvas.loginScr.tfPass.getText());
+			}
+			else if (GameCanvas.currentScreen == GameCanvas.fristLoginScr)
+			{
+				GameCanvas.fristLoginScr.setNewAcc(isCheckDataOK: true);
+			}
 		}
 	}
 

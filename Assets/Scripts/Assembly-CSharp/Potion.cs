@@ -212,7 +212,7 @@ public class Potion : MainItem
 		return false;
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector mVector2 = new mVector();
 		if (typeShop == 101)

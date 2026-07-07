@@ -703,7 +703,7 @@ public class MainItem
 		return null;
 	}
 
-	public virtual mVector getActionShop(sbyte typeShop)
+	public virtual mVector getActionShop(short typeShop)
 	{
 		mVector obj = new mVector();
 		obj.addElement(TabShop.cmdBuyPotion);

@@ -136,21 +136,21 @@ public class TaiXiuScreen : LuckyScreen
 		cmdDatCuocTai = new iCommand(T.datCuoc, 111, this);
 		cmdDatCuocXiu = new iCommand(T.datCuoc, 121, this);
 		cmdTTTai = new iCommand(T.tatTay + " " + T.tai, 21, this);
-		cmdTTT1m = new iCommand(T.tatTay + " " + T.tai + " 1M", 31, this);
-		cmdTTT2m = new iCommand(T.tatTay + " " + T.tai + " 2M", 32, this);
-		cmdTTT3m = new iCommand(T.tatTay + " " + T.tai + " 3M", 33, this);
-		cmdTTT4m = new iCommand(T.tatTay + " " + T.tai + " 4M", 34, this);
-		cmdTTT5m = new iCommand(T.tatTay + " " + T.tai + " 5M", 35, this);
-		cmdTTT10m = new iCommand(T.tatTay + " " + T.tai + " 10M", 36, this);
-		cmdTTT20m = new iCommand(T.tatTay + " " + T.tai + " 20M", 37, this);
+		cmdTTT1m = new iCommand(T.tatTay + " " + T.tai + " 10M", 31, this);
+		cmdTTT2m = new iCommand(T.tatTay + " " + T.tai + " 20M", 32, this);
+		cmdTTT3m = new iCommand(T.tatTay + " " + T.tai + " 50M", 33, this);
+		cmdTTT4m = new iCommand(T.tatTay + " " + T.tai + " 100M", 34, this);
+		cmdTTT5m = new iCommand(T.tatTay + " " + T.tai + " 200M", 35, this);
+		cmdTTT10m = new iCommand(T.tatTay + " " + T.tai + " 500M", 36, this);
+		cmdTTT20m = new iCommand(T.tatTay + " " + T.tai + " 1B", 37, this);
 		cmdTTXiu = new iCommand(T.tatTay + " " + T.xiu, 22, this);
-		cmdTTX1m = new iCommand(T.tatTay + " " + T.xiu + " 1M", 41, this);
-		cmdTTX2m = new iCommand(T.tatTay + " " + T.xiu + " 2M", 42, this);
-		cmdTTX3m = new iCommand(T.tatTay + " " + T.xiu + " 3M", 43, this);
-		cmdTTX4m = new iCommand(T.tatTay + " " + T.xiu + " 4M", 44, this);
-		cmdTTX5m = new iCommand(T.tatTay + " " + T.xiu + " 5M", 45, this);
-		cmdTTX10m = new iCommand(T.tatTay + " " + T.xiu + " 10M", 46, this);
-		cmdTTX20m = new iCommand(T.tatTay + " " + T.xiu + " 20M", 47, this);
+		cmdTTX1m = new iCommand(T.tatTay + " " + T.xiu + " 10M", 41, this);
+		cmdTTX2m = new iCommand(T.tatTay + " " + T.xiu + " 20M", 42, this);
+		cmdTTX3m = new iCommand(T.tatTay + " " + T.xiu + " 50M", 43, this);
+		cmdTTX4m = new iCommand(T.tatTay + " " + T.xiu + " 100M", 44, this);
+		cmdTTX5m = new iCommand(T.tatTay + " " + T.xiu + " 200M", 45, this);
+		cmdTTX10m = new iCommand(T.tatTay + " " + T.xiu + " 500M", 46, this);
+		cmdTTX20m = new iCommand(T.tatTay + " " + T.xiu + " 1B", 47, this);
 		timeBegin = mSystem.currentTimeMillis();
 		timeUpdate = mSystem.currentTimeMillis();
 		index1 = CRes.random(6);
@@ -295,7 +295,7 @@ public class TaiXiuScreen : LuckyScreen
 				num = 0;
 			}
 			GameCanvas.end_Dialog();
-			if (num / 1000 > 0 && num % 1000 == 0 && num <= 500000)
+			if (num / 1000 > 0 && num % 1000 == 0 && num <= 2000000000)
 			{
 				GlobalService.gI().TaiXiu(0, 1, num, 1, 0);
 			}
@@ -321,7 +321,7 @@ public class TaiXiuScreen : LuckyScreen
 				num = 0;
 			}
 			GameCanvas.end_Dialog();
-			if (num / 1000 > 0 && num % 1000 == 0 && num <= 500000)
+			if (num / 1000 > 0 && num % 1000 == 0 && num <= 2000000000)
 			{
 				GlobalService.gI().TaiXiu(0, 1, num, 0, 0);
 			}
@@ -366,46 +366,46 @@ public class TaiXiuScreen : LuckyScreen
 			break;
 		}
 		case 31:
-			GlobalService.gI().TaiXiu(0, 1, 1000000, 1, 1);
-			break;
-		case 32:
-			GlobalService.gI().TaiXiu(0, 1, 2000000, 1, 1);
-			break;
-		case 33:
-			GlobalService.gI().TaiXiu(0, 1, 3000000, 1, 1);
-			break;
-		case 34:
-			GlobalService.gI().TaiXiu(0, 1, 4000000, 1, 1);
-			break;
-		case 35:
-			GlobalService.gI().TaiXiu(0, 1, 5000000, 1, 1);
-			break;
-		case 36:
 			GlobalService.gI().TaiXiu(0, 1, 10000000, 1, 1);
 			break;
-		case 37:
+		case 32:
 			GlobalService.gI().TaiXiu(0, 1, 20000000, 1, 1);
 			break;
+		case 33:
+			GlobalService.gI().TaiXiu(0, 1, 50000000, 1, 1);
+			break;
+		case 34:
+			GlobalService.gI().TaiXiu(0, 1, 100000000, 1, 1);
+			break;
+		case 35:
+			GlobalService.gI().TaiXiu(0, 1, 200000000, 1, 1);
+			break;
+		case 36:
+			GlobalService.gI().TaiXiu(0, 1, 500000000, 1, 1);
+			break;
+		case 37:
+			GlobalService.gI().TaiXiu(0, 1, 1000000000, 1, 1);
+			break;
 		case 41:
-			GlobalService.gI().TaiXiu(0, 1, 1000000, 0, 1);
-			break;
-		case 42:
-			GlobalService.gI().TaiXiu(0, 1, 2000000, 0, 1);
-			break;
-		case 43:
-			GlobalService.gI().TaiXiu(0, 1, 3000000, 0, 1);
-			break;
-		case 44:
-			GlobalService.gI().TaiXiu(0, 1, 4000000, 0, 1);
-			break;
-		case 45:
-			GlobalService.gI().TaiXiu(0, 1, 5000000, 0, 1);
-			break;
-		case 46:
 			GlobalService.gI().TaiXiu(0, 1, 10000000, 0, 1);
 			break;
-		case 47:
+		case 42:
 			GlobalService.gI().TaiXiu(0, 1, 20000000, 0, 1);
+			break;
+		case 43:
+			GlobalService.gI().TaiXiu(0, 1, 50000000, 0, 1);
+			break;
+		case 44:
+			GlobalService.gI().TaiXiu(0, 1, 100000000, 0, 1);
+			break;
+		case 45:
+			GlobalService.gI().TaiXiu(0, 1, 200000000, 0, 1);
+			break;
+		case 46:
+			GlobalService.gI().TaiXiu(0, 1, 500000000, 0, 1);
+			break;
+		case 47:
+			GlobalService.gI().TaiXiu(0, 1, 1000000000, 0, 1);
 			break;
 		}
 	}

@@ -238,13 +238,22 @@ public class MsgGiftLogin : MsgDialog
 		if (type == TYPE_BOX_CHOICE)
 		{
 			int num = yDia + wItemInterface + 10;
+			int limitY = num + 2;
+			int limitH = hDia - wItemInterface - wItemInterface / 2 - 14;
 			for (int i = 0; i < mItemgift.Length; i++)
 			{
 				int x = xDia + 14 + i % 4 * wItem + 2;
 				int y = num + i / 4 * wItem + 5;
-				if (GameCanvas.isPointSelect(x, y, wItem, wItem))
+				if (list != null)
 				{
-					idSelect = i;
+					y -= list.cmx;
+				}
+				if (y + wItem > limitY && y < limitY + limitH)
+				{
+					if (GameCanvas.isPointSelect(x, y, wItem, wItem))
+					{
+						idSelect = i;
+					}
 				}
 			}
 		}

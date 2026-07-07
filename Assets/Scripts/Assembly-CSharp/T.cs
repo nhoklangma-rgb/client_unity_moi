@@ -1194,6 +1194,18 @@ public class T
 
 	public static string[] mFullSet;
 
+	public static string fullset16_dame;
+
+	public static string fullset16_hp;
+
+	public static string fullset16_all;
+
+	public static string fullset17_dame;
+
+	public static string fullset17_hp;
+
+	public static string fullset17_all;
+
 	public static string[] mTitleRoom;
 
 	public static string[] mHuongdanVaoLang;
@@ -1887,7 +1899,7 @@ public class T
 			"Đồ sát", "Sát nhân", "Đấu trường", "Chiến đấu", "Đỏ", "Lục", "Lam", "Vàng", "Tím", "Cam",
 			"Hồng"
 		};
-		mKeyQty = new string[6] { "Q", "W", "E", "R", "T", "Y" };
+		mKeyQty = new string[7] { "Q", "W", "E", "A", "R", "T", "Y" };
 		mAttribute = new string[5] { "Sức Mạnh", "Phòng thủ", "Thể Lực", "Tinh Thần", "Nhanh Nhẹn" };
 		mClazz = new string[6] { "Tất cả", "Võ sĩ", "Kiếm khách", "Đầu bếp", "Hoa tiêu", "Xạ thủ" };
 		mHair = new string[6][]
@@ -1950,6 +1962,12 @@ public class T
 		mChatInGame = new string[8] { "Phó bản Nami nào", "Vượt liên ải nào anh em", "Ai săn trùm không", "1 vé Mr3 nha", "Cần vào băng", "Băng tuyển thành viên", "Cho vào nhóm với", "Ai giao dịch không" };
 		mTiLeKichAn = new string[7] { "22 -> 30", "20 -> 28", "18 -> 26", "16 -> 24", "14 -> 22", "1 -> 5", " " };
 		mFullSet = new string[6] { "  - Giảm né đối thủ 5%", "  - Giảm p/đ đối thủ 5%", "  - Giảm c/m,x/g đối thủ 5%", "  - Nhận từ chối tử thần", "  - Tăng chỉ số trên lên 60%", "    Sát thương chuẩn 10%" };
+		fullset16_dame = "  - Tăng 5% sát thương";
+		fullset16_hp = "  - Tăng 5% máu tối đa";
+		fullset16_all = "  - Tăng 5% toàn bộ chỉ số";
+		fullset17_dame = "  - Tăng 20% sát thương";
+		fullset17_hp = "  - Tăng 20% máu tối đa";
+		fullset17_all = "  - Tăng 15% toàn bộ chỉ số";
 		mTitleRoom = new string[5] { "", "Sơ cấp 70%", "Trung cấp 50%", "Cao cấp 30%", "" };
 		mHuongdanVaoLang = new string[6] { "Gợi ý tân thủ đến Thị trấn vỏ sò\n Phụ bản săn trùm\n Vận hàng\n Nhiệm vụ hằng ngày\n Khóa bảo vệ\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)", "Gợi ý tân thủ đến Thị trấn Orang\n Cường hóa trang bị\n Vòng quay may mắn\n Thách đấu\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)", "Gợi ý tân thủ đến Làng Sirup\n Cường hóa ác quỷ\n Chiếm đảo\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)", "Gợi ý đến Nhà hàng Barati\n Băng hải tặc\n Phụ bản băng\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)", "Gợi ý đến làng hạt dẻ\n Phụ bản bảo vệ kho báu Namie\n Siêu trùm\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)", "Gợi ý đến Thị trấn khởi đầu\n Lệnh truy nã\n Siêu trùm\n Thách đấu\n Chi tiết hãy đến bảng hướng dẫn(làng này hoặc các làng trước)" };
 		mSpam = new string[7] { "Chặn tất cả", "Người lạ nhắn tin", "Mời kết bạn", "Mời vào nhóm", "Mời giao dịch", "Mời thách đấu", "Hiển thị lại" };

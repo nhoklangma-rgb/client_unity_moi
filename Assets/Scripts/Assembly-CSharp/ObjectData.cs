@@ -224,10 +224,6 @@ public class ObjectData
 
 	public static void checkDelHash(MyHashTable hash, int time, bool isTrue)
 	{
-		if (!isTrue)
-		{
-			return;
-		}
 		IDictionaryEnumerator enumerator = hash.GetEnumerator();
 		if (isTrue)
 		{
@@ -246,7 +242,7 @@ public class ObjectData
 		while (enumerator.MoveNext())
 		{
 			MainImage mainImage = (MainImage)enumerator.Value;
-			if (mainImage.count != -1 && GameCanvas.timeNow / 1000 - mainImage.count > time)
+			if (mainImage.count > 0 && GameCanvas.timeNow / 1000 - mainImage.count > time)
 			{
 				_delKeysCache.Add((string)enumerator.Key);
 			}
@@ -265,10 +261,6 @@ public class ObjectData
 
 	public static void checkDelHash_Data(MyHashTable hash, int time, bool isTrue)
 	{
-		if (!isTrue)
-		{
-			return;
-		}
 		IDictionaryEnumerator enumerator = hash.GetEnumerator();
 		if (isTrue)
 		{
@@ -287,7 +279,7 @@ public class ObjectData
 		while (enumerator.MoveNext())
 		{
 			EffectData effectData = (EffectData)enumerator.Value;
-			if (effectData.count != -1 && GameCanvas.timeNow / 1000 - effectData.count > time)
+			if (effectData.count > 0 && GameCanvas.timeNow / 1000 - effectData.count > time)
 			{
 				_delKeysCache.Add((string)enumerator.Key);
 			}

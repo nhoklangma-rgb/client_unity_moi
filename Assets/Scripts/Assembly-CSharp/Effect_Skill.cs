@@ -1152,10 +1152,7 @@ public class Effect_Skill : MainEffect
 			if (typeEffect == 24900 || typeEffect == 24901 || typeEffect == 812 || typeEffect == 1812 || typeEffect == 813 || (typeEffect >= 825 && typeEffect <= 828))
 			{
 				Object_Effect_Skill target = (Object_Effect_Skill)vecObjsBeFire.elementAt(0);
-				while (vecObjsBeFire.size() < 4)
-				{
-					vecObjsBeFire.addElement(new Object_Effect_Skill(target.ID, target.tem));
-				}
+				// Fixed: Removed while loop that duplicated the target 4 times, which caused boss sprite to disappear
 			}
 		}
 		if (objFireMain == GameScreen.player || CRes.random(3) == 0)
@@ -1216,10 +1213,17 @@ public class Effect_Skill : MainEffect
 			int fRe_val = 0;
 			if (objMainEff != null)
 			{
-				GameScreen.addHightDataeff(42, objMainEff.x - 20, objMainEff.y - objMainEff.hOne / 2);
-				GameScreen.addHightDataeff(42, objMainEff.x + 20, objMainEff.y - objMainEff.hOne / 2);
-				GameScreen.addHightDataeff(42, objMainEff.x, objMainEff.y - objMainEff.hOne / 2 - 20);
-				GameScreen.addHightDataeff(42, objMainEff.x, objMainEff.y - objMainEff.hOne / 2 + 20);
+				if (vecObjsBeFire.size() == 1)
+				{
+					GameScreen.addHightDataeff(42, objMainEff.x, objMainEff.y - objMainEff.hOne / 2);
+				}
+				else
+				{
+					GameScreen.addHightDataeff(42, objMainEff.x - 20, objMainEff.y - objMainEff.hOne / 2);
+					GameScreen.addHightDataeff(42, objMainEff.x + 20, objMainEff.y - objMainEff.hOne / 2);
+					GameScreen.addHightDataeff(42, objMainEff.x, objMainEff.y - objMainEff.hOne / 2 - 20);
+					GameScreen.addHightDataeff(42, objMainEff.x, objMainEff.y - objMainEff.hOne / 2 + 20);
+				}
 			}
 			for (int i_2 = 0; i_2 < vecObjsBeFire.size(); i_2++)
 			{
@@ -6044,9 +6048,12 @@ public class Effect_Skill : MainEffect
 						{
 								if (p.obj != null)
 								{
-									DataSkillEff o_6045 = new DataSkillEff((short)43, p.obj.x, p.obj.y - p.obj.hOne / 2, 4000);
-									o_6045.target = p.obj;
-									GameScreen.vecHighDataEff.addElement(o_6045);
+									if (p.obj.typeObject != 1)
+									{
+										DataSkillEff o_6045 = new DataSkillEff((short)43, p.obj.x, p.obj.y - p.obj.hOne / 2, 4000);
+										o_6045.target = p.obj;
+										GameScreen.vecHighDataEff.addElement(o_6045);
+									}
 								}
 								else
 								{
@@ -18372,7 +18379,7 @@ public class Effect_Skill : MainEffect
 				{
 					num2 = objBeFireMain.x + 10;
 				}
-				_ = objFireMain.x;
+				objFireMain.vx = (num2 - objFireMain.x) / 4;
 			}
 			else if (f >= 2)
 			{
@@ -18473,7 +18480,7 @@ public class Effect_Skill : MainEffect
 				{
 					num2 = objBeFireMain.x + 10;
 				}
-				_ = objFireMain.x;
+				objFireMain.vx = (num2 - objFireMain.x) / 4;
 			}
 			else if (f >= 2)
 			{
@@ -24118,7 +24125,10 @@ public class Effect_Skill : MainEffect
 			case 15:
 			case 16:
 			case 17:
-				obj.addEffSpec((short)objEff.mEffTypePlus[i], (short)objEff.mEff_Time_Plus[i]);
+				if (obj.typeObject != 1)
+				{
+					obj.addEffSpec((short)objEff.mEffTypePlus[i], (short)objEff.mEff_Time_Plus[i]);
+				}
 				break;
 			case 12:
 				GameScreen.addEffectNum(objEff.hpShow + T.chuan, obj.x, obj.y - obj.hOne, 11);

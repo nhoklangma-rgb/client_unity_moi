@@ -278,10 +278,10 @@ public class Player : MainPlayer
 		hIconFocus = 0;
 		Action = 0;
 		hotkeyPlayer = new Hotkey[2][];
-		hotkeyBuffPlayer = new Hotkey[6];
+		hotkeyBuffPlayer = new Hotkey[7];
 		for (int i = 0; i < hotkeyPlayer.Length; i++)
 		{
-			hotkeyPlayer[i] = new Hotkey[6];
+			hotkeyPlayer[i] = new Hotkey[7];
 			for (int j = 0; j < hotkeyPlayer[i].Length; j++)
 			{
 				hotkeyPlayer[i][j] = new Hotkey();
@@ -1365,17 +1365,27 @@ public class Player : MainPlayer
 		{
 			setActionHotKey(1);
 		}
+		else if (GameCanvas.UseKey(22))
+		{
+			GameCanvas.clearKeyPressed(22);
+			setActionHotKey(3);
+		}
 		else if (GameCanvas.keyActionUni(5))
 		{
 			setActionHotKey(2);
 		}
 		else if (GameCanvas.keyActionUni(7))
 		{
-			setActionHotKey(3);
+			setActionHotKey(4);
 		}
 		else if (GameCanvas.keyActionUni(9))
 		{
-			setActionHotKey(999);
+			setActionHotKey(5);
+		}
+		else if (GameCanvas.UseKey(20))
+		{
+			GameCanvas.clearKeyPressed(20);
+			setActionHotKey(6);
 		}
 		if (GameCanvas.keyActionUni(10))
 		{
@@ -2187,7 +2197,7 @@ public class Player : MainPlayer
 		}
 		if (hotkeyBuffPlayer == null)
 		{
-			hotkeyBuffPlayer = new Hotkey[6];
+			hotkeyBuffPlayer = new Hotkey[7];
 		}
 		for (int i = 0; i < hotkeyBuffPlayer.Length; i++)
 		{
@@ -2205,7 +2215,7 @@ public class Player : MainPlayer
 				hotkeyBuffPlayer[num].setSkill(mainSkill, skill_Info.idIcon);
 				num++;
 			}
-			if (num == 6)
+			if (num == 7)
 			{
 				break;
 			}

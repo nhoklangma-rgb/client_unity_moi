@@ -560,13 +560,13 @@ public class GlobalService : Cmd_Message
 		send();
 	}
 
-	public void Buy_Item_Potion(sbyte TypeShop, short ID, short value, sbyte cat)
+	public void Buy_Item_Potion(short TypeShop, short ID, short value, sbyte cat)
 	{
 		mSystem.outz("Buy_Item_Potion " + ID);
 		init(-18);
 		try
 		{
-			m.writer().writeByte(TypeShop);
+			m.writer().writeShort(TypeShop);
 			m.writer().writeShort(ID);
 			m.writer().writeShort(value);
 			if (TypeShop == 116 || TypeShop == 118)

@@ -12,7 +12,7 @@ public class MainMaterial : MainItem
 
 	public const sbyte MATERIAL_PROTECT_VER_2 = 7;
 
-	public MainMaterial(sbyte Id, string name, sbyte type, sbyte idicon, int price, short priceRuby, sbyte isTrade)
+	public MainMaterial(short Id, string name, sbyte type, sbyte idicon, int price, short priceRuby, sbyte isTrade)
 	{
 		ID = Id;
 		base.name = name;
@@ -32,7 +32,7 @@ public class MainMaterial : MainItem
 		getInfo();
 	}
 
-	public MainMaterial(sbyte typeObj, sbyte Id, string name, sbyte type, sbyte idicon, short num, int price, short priceRuby, sbyte isTrade)
+	public MainMaterial(sbyte typeObj, short Id, string name, sbyte type, sbyte idicon, short num, int price, short priceRuby, sbyte isTrade)
 	{
 		typeObject = typeObj;
 		ID = Id;
@@ -125,7 +125,7 @@ public class MainMaterial : MainItem
 		return null;
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector obj = new mVector();
 		obj.addElement(TabShop.cmdBuyPotion);

@@ -230,6 +230,14 @@ public class Start_Skill
 		GameScreen.player.toX = GameScreen.player.x;
 		GameScreen.player.toY = GameScreen.player.y;
 		GameScreen.player.countAutoMove = 0;
+		if (HAIRMOD.mAuto.Instance.isTanSat)
+		{
+			GameScreen.player.posTransRoad = null;
+			GameScreen.player.x = toX;
+			GameScreen.player.y = toY;
+			beginSkill();
+			return;
+		}
 		if (GameScreen.player.posTransRoad != null)
 		{
 			GameScreen.player.countAutoMove = 1;

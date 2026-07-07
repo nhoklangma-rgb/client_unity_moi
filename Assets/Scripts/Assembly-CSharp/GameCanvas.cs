@@ -164,8 +164,8 @@ public class GameCanvas : MotherCanvas, IActionListener
 
 	public static string[][] strListServer = new string[2][]
 	{
-		new string[2] { "Hải tặc free", "Hải tặc mũ rơm" },
-		new string[2] { "Hải tặc free", "Hải tặc mũ rơm" }
+		new string[3] { "Hải tặc free", "Hải tặc mũ rơm", "Localhost" },
+		new string[3] { "Hải tặc free", "Hải tặc mũ rơm", "Localhost" }
 	};
 
 	public static int IndexServer = 0;
@@ -604,6 +604,11 @@ public class GameCanvas : MotherCanvas, IActionListener
 			text = "14.225.203.159";
 			num = 2240;
 		}
+		else if (IndexServer == 2)
+		{
+			text = "127.0.0.1";
+			num = 2240;
+		}
 		else
 		{
 			text = "14.225.203.159";
@@ -634,13 +639,46 @@ public class GameCanvas : MotherCanvas, IActionListener
 	{
 		isLoadImage = true;
 		Session_ME.gI().setHandler(GlobalMessageHandler.gI());
-		int port = 2239;
-		if (IndexServer == 1)
+		int num = 2239;
+		string text = "14.225.203.159";
+		if (IndexServer == 0)
 		{
-			port = 2240;
+			text = "14.225.203.159";
+			num = 2239;
 		}
-		string host = "14.225.203.159";
-		Session_ME.gI().connect(host, port);
+		else if (IndexServer == 1)
+		{
+			text = "14.225.203.159";
+			num = 2240;
+		}
+		else if (IndexServer == 2)
+		{
+			text = "127.0.0.1";
+			num = 2240;
+		}
+		else
+		{
+			text = "14.225.203.159";
+			num = 2239;
+		}
+		string[] array = null;
+		try
+		{
+			if (strIP.Length > 0)
+			{
+				array = mFont.split(strIP, "-");
+			}
+		}
+		catch (Exception)
+		{
+			array = null;
+		}
+		if (array != null)
+		{
+			text = array[0];
+			num = int.Parse(array[1]);
+		}
+		Session_ME.gI().connect(text, num);
 		infoDisConnect = "";
 	}
 

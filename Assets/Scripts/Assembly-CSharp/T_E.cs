@@ -583,7 +583,7 @@ public class T_E : T
 			"PK", "Killer", "Arena", "Fight", "Red", "Green", "Lime", "Yellow", "Purple", "Orange",
 			"Pink"
 		};
-		T.mKeyQty = new string[5] { "Q", "W", "E", "R", "T" };
+		T.mKeyQty = new string[7] { "Q", "W", "E", "A", "R", "T", "Y" };
 		T.mAttribute = new string[5] { "Strength", "Defense", "Vitality", "Intelligence", "Agility" };
 		T.mClazz = new string[6] { "All", "Fighter", "Swordman", "Chef", "Navigator", "Gunner" };
 		T.mHair = new string[6][]
@@ -647,6 +647,12 @@ public class T_E : T
 		T.mTiLeKichAn = new string[7] { "22 -> 30", "20 -> 28", "18 -> 26", "16 -> 24", "24 -> 22", "1 -> 5", " " };
 		T.mTitleRoom = new string[5] { "", "Level 1: 70%", "Level 2: 50%", "Level 3: 30%", "" };
 		T.mFullSet = new string[6] { "  - Reduce Enemy Evasion 5%", "  - Reduce Enemy Reflection 5%", "  - Reduce Enemy Critical, Pierce 5%", "  - Deny Death", "  - Increase above index to 60%", "    Sát thương chuẩn 10%" };
+		T.fullset16_dame = "  - Increase 5% damage";
+		T.fullset16_hp = "  - Increase 5% max HP";
+		T.fullset16_all = "  - Increase 5% all stats";
+		T.fullset17_dame = "  - Increase 20% damage";
+		T.fullset17_hp = "  - Increase 20% max HP";
+		T.fullset17_all = "  - Increase 15% all stats";
 		T.mTitleRoom = new string[5] { "", "Level 1: 70%", "Level 2: 50%", "Level 3: 30%", "" };
 		T.mHuongdanVaoLang = new string[6] { "Let's go to Shell Town\n Boss Hunt\n Transport\n Daily quest\n Protect password\n See Tutorial for details", "Let's go to Orang Town\n Upgrade Equipment\n Lucky Treasure Spin\n Challenge\n See Tutorial for details", "Let's go to Sirup Village\n Upgrade Devil level\n Occupy the Island\n See Tutorial for details", "Let's go to Barati Restaurant\n Pirate Crew\n Crew Dungeon\n See Tutorial for details", "Let's go to Chestnut Village\n Orange Dungeon\n Super Boss\n See Tutorial for details", "Let's go to Begin Town\n Wanted\n Super Boss\n Challenge\n See Tutorial for details" };
 		T.mSpam = new string[7] { "Block all", "Messages", "Friend request", "Party invites", "Trade request", "Challenge request", "Show again" };

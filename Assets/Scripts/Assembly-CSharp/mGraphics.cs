@@ -70,7 +70,7 @@ public class mGraphics
 
 	public const int TRANS_ROT90 = 5;
 
-	public static Dictionary<string, Texture2D> cachedTextures = new Dictionary<string, Texture2D>();
+	public static Dictionary<GraphicKey, Texture2D> cachedTextures = new Dictionary<GraphicKey, Texture2D>();
 
 	public static int addYWhenOpenKeyBoard;
 
@@ -96,10 +96,9 @@ public class mGraphics
 
 	private Material lineMaterial;
 
-	// Reusable StringBuilder to avoid string allocation for cache keys every frame
-	private static StringBuilder _keyBuilder = new StringBuilder(64);
+	// _keyBuilder removed in favor of GraphicKey struct
 
-	private void cache(string key, Texture2D value)
+	private void cache(GraphicKey key, Texture2D value)
 	{
 		if (cachedTextures.Count > 800)
 		{
@@ -215,9 +214,11 @@ public class mGraphics
 			x2 += translateX;
 			y2 += translateY;
 		}
-		_keyBuilder.Length = 0;
-		_keyBuilder.Append("dl").Append(r).Append(g).Append(b);
-		string key = _keyBuilder.ToString();
+		GraphicKey key = default(GraphicKey);
+		key.type = 1;
+		key.r = r;
+		key.g = g;
+		key.b = b;
 		Texture2D texture2D;
 		if (!cachedTextures.TryGetValue(key, out texture2D) || texture2D == null)
 		{
@@ -338,9 +339,14 @@ public class mGraphics
 		}
 		int width = 1;
 		int height = 1;
-		_keyBuilder.Length = 0;
-		_keyBuilder.Append("fr").Append(width).Append(height).Append(r).Append(g).Append(b).Append(a);
-		string key = _keyBuilder.ToString();
+		GraphicKey key = default(GraphicKey);
+		key.type = 2;
+		key.w = (short)width;
+		key.h = (short)height;
+		key.r = r;
+		key.g = g;
+		key.b = b;
+		key.a = a;
 		Texture2D texture2D;
 		if (!cachedTextures.TryGetValue(key, out texture2D) || texture2D == null)
 		{
@@ -941,9 +947,14 @@ public class mGraphics
 				x += translateX;
 				y += translateY;
 			}
-			_keyBuilder.Length = 0;
-			_keyBuilder.Append("dg").Append(x0).Append(y0).Append(w).Append(h).Append(transform).Append(image.GetHashCode());
-			string key = _keyBuilder.ToString();
+			GraphicKey key = default(GraphicKey);
+			key.type = 0;
+			key.imageHash = image.GetHashCode();
+			key.x0 = (short)x0;
+			key.y0 = (short)y0;
+			key.w = (short)w;
+			key.h = (short)h;
+			key.transform = (sbyte)transform;
 			Texture2D texture2D;
 			if (!cachedTextures.TryGetValue(key, out texture2D) || texture2D == null)
 			{
@@ -1371,5 +1382,71 @@ public class mGraphics
 		float alpha = 0.5f;
 		setColor(color, alpha);
 		fillRect(x, y, w, h, isA: false);
+	}
+}
+
+public struct GraphicKey : IEquatable<GraphicKey>
+{
+	public byte type; // 0 = drawRegion, 1 = drawLine, 2 = fillRect
+	public int imageHash;
+	public short x0;
+	public short y0;
+	public short w;
+	public short h;
+	public sbyte transform;
+	public float r;
+	public float g;
+	public float b;
+	public float a;
+
+	public bool Equals(GraphicKey other)
+	{
+		return type == other.type &&
+			   imageHash == other.imageHash &&
+			   x0 == other.x0 &&
+			   y0 == other.y0 &&
+			   w == other.w &&
+			   h == other.h &&
+			   transform == other.transform &&
+			   r == other.r &&
+			   g == other.g &&
+			   b == other.b &&
+			   a == other.a;
+	}
+
+	public override bool Equals(object obj)
+	{
+		return obj is GraphicKey && Equals((GraphicKey)obj);
+	}
+
+	public override int GetHashCode()
+	{
+		int hash = 17;
+		hash = hash * 23 + type;
+		if (type == 0)
+		{
+			hash = hash * 23 + imageHash;
+			hash = hash * 23 + x0;
+			hash = hash * 23 + y0;
+			hash = hash * 23 + w;
+			hash = hash * 23 + h;
+			hash = hash * 23 + transform;
+		}
+		else if (type == 1)
+		{
+			hash = hash * 23 + r.GetHashCode();
+			hash = hash * 23 + g.GetHashCode();
+			hash = hash * 23 + b.GetHashCode();
+		}
+		else
+		{
+			hash = hash * 23 + r.GetHashCode();
+			hash = hash * 23 + g.GetHashCode();
+			hash = hash * 23 + b.GetHashCode();
+			hash = hash * 23 + a.GetHashCode();
+			hash = hash * 23 + w;
+			hash = hash * 23 + h;
+		}
+		return hash;
 	}
 }

@@ -29,7 +29,7 @@ public class ItemHair : MainItem
 		MainObject.paintOnePart(g, value, typePart, x, y, 2);
 	}
 
-	public override mVector getActionShop(sbyte typeShop)
+	public override mVector getActionShop(short typeShop)
 	{
 		mVector mVector2 = new mVector();
 		if (price == 0 && priceRuby == 0)

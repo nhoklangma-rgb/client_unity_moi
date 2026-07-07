@@ -110,8 +110,28 @@ public class ChatTextField : AvMain
 	{
 		if (tfChat.getText().Length > 0)
 		{
-			GameScreen.player.strChatPopup = tfChat.getText();
-			GlobalService.gI().chatPopup(tfChat.getText());
+			string text = tfChat.getText();
+			if (text.StartsWith("/"))
+			{
+				if (text.Equals("/an") || text.Equals("/annguoi"))
+				{
+					GameScreen.isShowNhanVat = !GameScreen.isShowNhanVat;
+					Interface_Game.addInfoPlayerNormal("Ẩn người chơi khác: " + (!GameScreen.isShowNhanVat ? "Bật" : "Tắt"), mFont.tahoma_7_yellow);
+					tfChat.setText("");
+					isShow = false;
+					return;
+				}
+				else if (text.Equals("/anhu") || text.Equals("/anhieuung"))
+				{
+					GameScreen.isShowSkillPlayer = !GameScreen.isShowSkillPlayer;
+					Interface_Game.addInfoPlayerNormal("Ẩn hiệu ứng & sát thương: " + (!GameScreen.isShowSkillPlayer ? "Bật" : "Tắt"), mFont.tahoma_7_yellow);
+					tfChat.setText("");
+					isShow = false;
+					return;
+				}
+			}
+			GameScreen.player.strChatPopup = text;
+			GlobalService.gI().chatPopup(text);
 			tfChat.setText("");
 		}
 		if (GameCanvas.isTouch)

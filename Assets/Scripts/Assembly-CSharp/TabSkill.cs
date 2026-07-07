@@ -298,12 +298,33 @@ public class TabSkill : MainTab
 				break;
 			}
 			mVector mVector2 = new mVector();
-			for (int i = 0; i < 6; i++)
+			for (int i = 0; i < 7; i++)
 			{
-				if (i != 2 && (GameCanvas.isTouch || i != 5))
+				if (i != 2)
 				{
+					if (!GameCanvas.isTouch && i > 5)
+					{
+						continue;
+					}
 					iCommand iCommand2 = null;
-					iCommand2 = (GameCanvas.isTouch ? new iCommand(T.keys + " " + (i + 1), 4, i, this) : ((!TField.isQwerty) ? new iCommand(T.keys + " " + (i * 2 + 1), 4, i, this) : new iCommand(T.keys + " " + T.mKeyQty[i], 4, i, this)));
+					if (GameCanvas.isTouch)
+					{
+						iCommand2 = new iCommand(T.keys + " " + ((i < 2) ? (i + 1) : i), 4, i, this);
+					}
+					else if (TField.isQwerty)
+					{
+						iCommand2 = new iCommand(T.keys + " " + T.mKeyQty[i], 4, i, this);
+					}
+					else
+					{
+						string keyName = "";
+						if (i == 0) keyName = "1";
+						else if (i == 1) keyName = "3";
+						else if (i == 3) keyName = "2";
+						else if (i == 4) keyName = "7";
+						else if (i == 5) keyName = "9";
+						iCommand2 = new iCommand(T.keys + " " + keyName, 4, i, this);
+					}
 					mVector2.addElement(iCommand2);
 				}
 			}

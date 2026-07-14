@@ -16,14 +16,16 @@ workflows:
     scripts:
       - name: Ghép các file thư viện lớn (Merge split library files)
         script: |
-          # Ghép lại file thư viện lõi của Unity
+          # Ghép lại file thư viện lõi của Unity theo đúng thứ tự số học (0, 1, 2, 3, 4)
           cd ios_build/Libraries
-          cat libiPhone-lib.a.part* > libiPhone-lib.a
+          rm -f libiPhone-lib.a
+          for i in {0..4}; do cat libiPhone-lib.a.part$i >> libiPhone-lib.a; done
           rm libiPhone-lib.a.part*
           
-          # Ghép lại file thư viện Vivox
+          # Ghép lại file thư viện Vivox theo đúng thứ tự số học (0 đến 18)
           cd com.unity.services.vivox/Plugins/iOS
-          cat libvivoxsdk.a.part* > libvivoxsdk.a
+          rm -f libvivoxsdk.a
+          for i in {0..18}; do cat libvivoxsdk.a.part$i >> libvivoxsdk.a; done
           rm libvivoxsdk.a.part*
       - name: Biên dịch Xcode không cần Chứng chỉ Apple (Build Xcode Unsigned)
         script: |

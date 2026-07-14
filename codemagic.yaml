@@ -1,43 +1,42 @@
-# File cấu hình Codemagic để tự động build dự án Unity iOS ra file .ipa trên Cloud (Không cần máy Mac)
-# Tài liệu cấu hình chi tiết cho dự án Unity
+# File cấu hình Codemagic tối ưu để đóng gói Xcode Project có sẵn thành file .ipa (Chạy siêu tốc trên Cloud, không cần Unity Editor)
 
 workflows:
   unity-ios-build:
-    name: Unity iOS Build Workflow
-    max_build_duration: 60
-    instance_type: mac_mini_m1 # Sửa từ mac_mini_co2 thành mac_mini_m1 hợp lệ
+    name: Xcode iOS Pack Workflow
+    max_build_duration: 30
+    instance_type: mac_mini_m1
     environment:
-      groups:
-        - unity_credentials # Cấu hình Username, Password, và License của Unity trong Codemagic UI
-      vars:
-        UNITY_PROJECT_PATH: "." # Thư mục chứa dự án Unity
       xcode: latest
       cocoapods: default
     triggering:
       events:
         - push
       branch_patterns:
-        - pattern: 'main' # Sửa target thành pattern đúng chuẩn Codemagic
+        - pattern: 'main'
     scripts:
-      - name: Kích hoạt bản quyền Unity (Activate Unity License)
+      - name: Ghép các file thư viện lớn (Merge split library files)
         script: |
-          # Codemagic tự động quản lý việc activate thông qua Environment variables (UNITY_SERIAL hoặc UNITY_LIC)
-          echo "Activating Unity..."
-      - name: Biên dịch dự án Unity sang Xcode Project (Unity Build Xcode)
-        script: |
-          # Chạy Unity ở chế độ CLI để build ra Xcode project
-          $UNITY_BIN -batchmode -quit -projectPath $UNITY_PROJECT_PATH -buildTarget iOS -executeMethod BuildScript.PerformBuild
+          # Ghép lại file thư viện lõi của Unity
+          cd ios_build/Libraries
+          cat libiPhone-lib.a.part* > libiPhone-lib.a
+          rm libiPhone-lib.a.part*
+          
+          # Ghép lại file thư viện Vivox
+          cd com.unity.services.vivox/Plugins/iOS
+          cat libvivoxsdk.a.part* > libvivoxsdk.a
+          rm libvivoxsdk.a.part*
       - name: Đóng gói dự án Xcode sang file .ipa (Xcode Archive & Export)
         script: |
+          cd ios_build
+          
           # Thực hiện build dự án Xcode thành file .ipa thành phẩm
-          cd ios-build
-          xcode-project build-ipa --workspace *.xcworkspace --scheme Unity-iPhone
+          xcode-project build-ipa --project Unity-iPhone.xcodeproj --scheme Unity-iPhone
     artifacts:
       - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:
-          - your_email@example.com # Thay thế bằng email của bạn để nhận link tải file .ipa
+          - nhoklangma@gmail.com # Tự động gửi link tải file .ipa về email đăng ký của bạn
         notify:
           success: true
           failure: true

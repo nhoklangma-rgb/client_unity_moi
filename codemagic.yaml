@@ -40,7 +40,7 @@ workflows:
           # Lấy đường dẫn tuyệt đối cho thư mục build
           ABSOLUTE_BUILD_DIR="$(pwd)/../build"
           
-          # Thực hiện compile sử dụng chữ ký tự sinh Ad-hoc ("-") để vượt qua rào cản của Dynamic Framework (UnityFramework.framework)
+          # Bỏ lệnh "clean" để tránh lỗi bảo mật thư mục của Xcode (Chỉ chạy lệnh "build")
           xcodebuild -project Unity-iPhone.xcodeproj \
                      -scheme Unity-iPhone \
                      -configuration Release \
@@ -50,7 +50,7 @@ workflows:
                      CODE_SIGNING_REQUIRED=YES \
                      CODE_SIGNING_ALLOWED=YES \
                      AD_HOC_CODE_SIGNING_ALLOWED=YES \
-                     clean build
+                     build
       - name: Đóng gói thư mục .app thành file .ipa chạy thử (Package IPA)
         script: |
           # Kiểm tra thư mục build sản phẩm

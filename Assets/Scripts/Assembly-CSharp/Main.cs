@@ -78,7 +78,40 @@ public class Main : MonoBehaviour
 	private static GUIStyle cachedCenteredStyle;
 	private static string cachedSpeedLabel;
 	private static float cachedSpeedValue = -1f;
+	private static GUIStyle cachedButtonStyle;
+	private static int cachedButtonFontSize;
+	private static VivoxManager _cachedVivoxRef;
 	private static bool sizeChangeInitialized = false;
+	private static int lastScreenWidth;
+	private static int lastScreenHeight;
+
+	// Pill HUD Panel State - cache tái sử dụng để tránh alloc trong OnGUI
+	private static Texture2D cachedPillBg;
+	private static Texture2D cachedCircleWhite;
+	private static Texture2D cachedRoundedBoxWhite;
+	private static int micClickFeedbackTick;
+	private static bool isGameAudioMuted = false;
+
+	// Pre-allocated layout cache để OnGUI không alloc mỗi frame
+	private static readonly Rect[] _pillRectCache = new Rect[16];
+	private static readonly Color[] _pillColorCache = new Color[16];
+	private static int _pillRectCount = 0;
+	private static int _pillColorCount = 0;
+	private static Color _scratchColor = Color.white;
+	private static Matrix4x4 _scratchMatrix;
+
+	private const int PILL_RECT_PILL = 0;
+	private const int PILL_RECT_SND = 1;
+	private const int PILL_RECT_VOICE = 2;
+	private const int PILL_RECT_MIC = 3;
+	private const int PILL_RECT_DEC = 4;
+	private const int PILL_RECT_LBL = 5;
+	private const int PILL_RECT_INC = 6;
+	private const int PILL_RECT_SEPARATOR = 7;
+	private const int PILL_RECT_TMP1 = 8;
+	private const int PILL_RECT_TMP2 = 9;
+	private const int PILL_RECT_TMP3 = 10;
+	private const int PILL_RECT_TMP4 = 11;
 
 #if UNITY_IOS
 	private static AudioSource bgAudioSource;
@@ -116,6 +149,7 @@ public class Main : MonoBehaviour
 			GameCanvas.isTouch = !GameMidlet.isPC;
 			started = true;
 			GameCanvas.readGraphicsPC();
+			
 			if (GameMidlet.isPC)
 			{
 				if (GameCanvas.lv == 0)
@@ -177,72 +211,13 @@ public class Main : MonoBehaviour
 			}
 
 			float baseScale = 1f;
-			float btnW = 35f * baseScale;
-			float btnH = 30f * baseScale;
-			float lblW = 100f * baseScale;
-			float fontSize = 14f * baseScale;
-			float yPos = 5f * baseScale;
-			float startX = Screen.width / 2f - (btnW + lblW + btnW) / 2f;
-#if UNITY_IOS
-			Rect safeArea = Screen.safeArea;
-			startX = safeArea.x + safeArea.width / 2f - (btnW + lblW + btnW) / 2f;
-			float topOffset = Screen.height - safeArea.yMax;
-			yPos = topOffset + 15f;
-#endif
-
-			Texture2D bgTex = Texture2D.whiteTexture;
-			float bgX = startX - 10f;
-			float bgY = yPos - 5f;
-			float bgW = btnW + lblW + btnW + 20f;
-			float bgH = btnH + 10f;
-			Color prevColor = GUI.color;
-			GUI.color = new Color(0f, 0f, 0f, 0.45f);
-			GUI.DrawTexture(new Rect(bgX, bgY, bgW, bgH), bgTex);
-			GUI.color = prevColor;
-
-			GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-			buttonStyle.fontSize = (int)fontSize;
-			buttonStyle.alignment = TextAnchor.MiddleCenter;
-			buttonStyle.fontStyle = FontStyle.Bold;
-
-			GUI.color = Color.white;
-			if (GUI.Button(new Rect(startX, yPos, btnW, btnH), "-", buttonStyle))
+			if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
 			{
-				gameSpeed = Mathf.Max(0.1f, gameSpeed - 0.1f);
-				Time.timeScale = gameSpeed;
-				cachedSpeedValue = -1f;
+				baseScale = Mathf.Max(1.5f, Screen.width / 640f);
+				if (baseScale > 3.0f) baseScale = 3.0f;
 			}
-
-			if (cachedCenteredStyle == null)
-			{
-				cachedCenteredStyle = new GUIStyle(GUI.skin.label);
-				cachedCenteredStyle.alignment = TextAnchor.MiddleCenter;
-				cachedCenteredStyle.fontStyle = FontStyle.Bold;
-			}
-			cachedCenteredStyle.fontSize = (int)fontSize;
-			cachedCenteredStyle.normal.textColor = Color.white;
-			if (cachedSpeedValue != gameSpeed)
-			{
-				cachedSpeedValue = gameSpeed;
-				string platformStr = "PC";
-				if (Application.platform == RuntimePlatform.Android)
-				{
-					platformStr = "APK";
-				}
-				else if (Application.platform == RuntimePlatform.IPhonePlayer)
-				{
-					platformStr = "iOS";
-				}
-				cachedSpeedLabel = "Speed: " + System.Math.Round(gameSpeed, 1) + "x (" + platformStr + ")";
-			}
-			GUI.Label(new Rect(startX + btnW, yPos, lblW, btnH), cachedSpeedLabel, cachedCenteredStyle);
-
-			if (GUI.Button(new Rect(startX + btnW + lblW, yPos, btnW, btnH), "+", buttonStyle))
-			{
-				gameSpeed = Mathf.Min(3.0f, gameSpeed + 0.1f);
-				Time.timeScale = gameSpeed;
-				cachedSpeedValue = -1f;
-			}
+			
+			DrawPillMenu(baseScale);
 			GUI.color = Color.white;
 		}
 	}
@@ -256,12 +231,12 @@ public class Main : MonoBehaviour
 				Screen.orientation = ScreenOrientation.AutoRotation;
 				Application.runInBackground = true;
 				
-				// === CẤU HÌNH ĐỒ HỌA SẮC NÉT CHO MOBILE ===
-				QualitySettings.vSyncCount = 0; // Tắt VSync: giảm input lag, tiết kiệm CPU
+				// === Cáº¤U HÃŒNH Äá»’ Há»ŒA Sáº®C NÃ‰T CHO MOBILE ===
+				QualitySettings.vSyncCount = 0; // Táº¯t VSync: giáº£m input lag, tiáº¿t kiá»‡m CPU
 #if UNITY_ANDROID || UNITY_IOS
 				// Mobile: target 60fps
 				Application.targetFrameRate = 60;
-				// Giữ hình ảnh 2D sắc nét, không bị nhòe
+				// Giá»¯ hÃ¬nh áº£nh 2D sáº¯c nÃ©t, khÃ´ng bá»‹ nhÃ²e
 				QualitySettings.antiAliasing = 0;
 				QualitySettings.shadows = ShadowQuality.Disable;
 				QualitySettings.anisotropicFiltering = AnisotropicFiltering.Disable;
@@ -273,18 +248,18 @@ public class Main : MonoBehaviour
 				QualitySettings.billboardsFaceCameraPosition = false;
 				QualitySettings.particleRaycastBudget = 4;
 				QualitySettings.lodBias = 1.0f;
-				// Sử dụng độ phân giải ảnh gốc sắc nét (không giảm mipmap)
+				// Sá»­ dá»¥ng Ä‘á»™ phÃ¢n giáº£i áº£nh gá»‘c sáº¯c nÃ©t (khÃ´ng giáº£m mipmap)
 				QualitySettings.globalTextureMipmapLimit = 0;
-				GameCanvas.lowGraphic = false; // Tắt chế độ cấu hình thấp
+				GameCanvas.lowGraphic = false; // Táº¯t cháº¿ Ä‘á»™ cáº¥u hÃ¬nh tháº¥p
 #else
-				// PC: 60 FPS cho 2D là quá đủ
+				// PC: 60 FPS cho 2D lÃ  quÃ¡ Ä‘á»§
 				Application.targetFrameRate = 60;
 #endif
 #if UNITY_IOS
-				// iOS: khởi tạo silent audio để chạy ngầm
+				// iOS: khá»Ÿi táº¡o silent audio Ä‘á»ƒ cháº¡y ngáº§m
 				InitBackgroundAudio();
 #endif
-				Time.fixedDeltaTime = 0.033f; // 30Hz physics - đồng bộ với 30fps mobile
+				Time.fixedDeltaTime = 0.01667f; // 60Hz - game logic chạy đồng bộ 60fps
 				Screen.sleepTimeout = SleepTimeout.NeverSleep;
 				Time.timeScale = gameSpeed;
 				base.useGUILayout = false;
@@ -295,6 +270,12 @@ public class Main : MonoBehaviour
 				}
 				isRun = true;
 				ScaleGUI.initScaleGUI();
+				if (MotherCanvas.instance != null)
+				{
+					MotherCanvas.instance.checkZoomLevel();
+				}
+				lastScreenWidth = Screen.width;
+				lastScreenHeight = Screen.height;
 				IMEI = SystemInfo.deviceUniqueIdentifier; 
 				if (GameMidlet.isPC)
 				{
@@ -368,6 +349,8 @@ public class Main : MonoBehaviour
 	{
 		try
 		{
+			// Decrement mic click feedback in FixedUpdate (1x/frame) instead of OnGUI (3-5x/frame)
+			if (micClickFeedbackTick > 0) micClickFeedbackTick--;
 			Rms.update();
 			count++;
 			if (count < 10)
@@ -393,6 +376,16 @@ public class Main : MonoBehaviour
 						sizeChangeInitialized = true;
 					}
 				}
+			}
+			else if (Screen.width != lastScreenWidth || Screen.height != lastScreenHeight)
+			{
+				ScaleGUI.initScaleGUI();
+				if (MotherCanvas.instance != null)
+				{
+					MotherCanvas.instance.checkZoomLevel();
+				}
+				lastScreenWidth = Screen.width;
+				lastScreenHeight = Screen.height;
 			}
 			updateCount++;
 			ipKeyboard.update();
@@ -434,13 +427,475 @@ public class Main : MonoBehaviour
 		}
 		catch (System.Exception)
 		{
-			// Bảo vệ game loop: nếu có lỗi trong 1 frame, vẫn tiếp tục frame sau
+			// Báº£o vá»‡ game loop: náº¿u cÃ³ lá»—i trong 1 frame, váº«n tiáº¿p tá»¥c frame sau
 		}
 	}
 
 	private void Awake()
 	{
 		main = this;
+	}
+
+	private static void EnsurePillMenuAssets()
+	{
+		if (cachedPillBg == null)
+		{
+			cachedPillBg = CreateRoundedRectTexture(250, 36, 12f, new Color(0.12f, 0.12f, 0.12f, 0.75f), new Color(1f, 1f, 1f, 0.15f), 1f);
+			cachedCircleWhite = CreateRoundedRectTexture(32, 32, 16f, Color.white, Color.clear, 0f);
+			cachedRoundedBoxWhite = CreateRoundedRectTexture(32, 32, 6f, Color.white, Color.clear, 0f);
+		}
+	}
+
+	private static Texture2D CreateRoundedRectTexture(int w, int h, float r, Color fillColor, Color borderColor, float borderWidth)
+	{
+		Texture2D texture = new Texture2D(w, h, TextureFormat.ARGB32, false);
+		texture.wrapMode = TextureWrapMode.Clamp;
+		texture.filterMode = FilterMode.Bilinear;
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				float cx = (x < r) ? r : ((x > w - r - 1) ? (w - r - 1) : x);
+				float cy = (y < r) ? r : ((y > h - r - 1) ? (h - r - 1) : y);
+				float dist = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+				
+				Color pixelColor = Color.clear;
+				if (dist <= r)
+				{
+					if (borderWidth > 0.05f && dist >= r - borderWidth)
+					{
+						float alpha = (r - dist) / borderWidth;
+						pixelColor = Color.Lerp(borderColor, fillColor, alpha);
+					}
+					else
+					{
+						pixelColor = fillColor;
+					}
+				}
+				else if (dist <= r + 1f)
+				{
+					float alpha = 1f - (dist - r);
+					Color edgeColor = borderColor;
+					edgeColor.a *= alpha;
+					pixelColor = edgeColor;
+				}
+				texture.SetPixel(x, y, pixelColor);
+			}
+		}
+		texture.Apply();
+		return texture;
+	}
+
+	private static void DrawPillMenu(float baseScale)
+	{
+		EnsurePillMenuAssets();
+
+		if (_cachedVivoxRef == null) _cachedVivoxRef = VivoxManager.Instance;
+
+		float pillWidth = 250f * baseScale;
+		float pillHeight = 36f * baseScale;
+
+		float startX = Screen.width / 2f - pillWidth / 2f;
+		float startY = 8f * baseScale;
+#if UNITY_IOS
+		Rect safeArea = Screen.safeArea;
+		startX = safeArea.x + safeArea.width / 2f - pillWidth / 2f;
+		float topOffset = Screen.height - safeArea.yMax;
+		startY = topOffset + 12f;
+#endif
+
+		Rect pillRect = _pillRectCache[PILL_RECT_PILL];
+		pillRect.x = startX;
+		pillRect.y = startY;
+		pillRect.width = pillWidth;
+		pillRect.height = pillHeight;
+		_pillRectCache[PILL_RECT_PILL] = pillRect;
+		GUI.DrawTexture(pillRect, cachedPillBg);
+
+		float pad = 6f * baseScale;
+		float btnSize = 24f * baseScale;
+		float curX = startX + 14f * baseScale;
+		float curY = startY + (pillHeight - btnSize) / 2f;
+
+		// 1. Draw Game Sound Button (Loa Game)
+		Rect sndRect = _pillRectCache[PILL_RECT_SND];
+		sndRect.x = curX;
+		sndRect.y = curY;
+		sndRect.width = btnSize;
+		sndRect.height = btnSize;
+		_pillRectCache[PILL_RECT_SND] = sndRect;
+		SetCachedColor(isGameAudioMuted ? 0 : 1, isGameAudioMuted ? new Color(0.5f, 0.5f, 0.5f, 0.7f) : new Color(0.2f, 0.55f, 0.9f, 0.9f));
+		GUI.color = _pillColorCache[isGameAudioMuted ? 0 : 1];
+		GUI.DrawTexture(sndRect, cachedCircleWhite);
+
+		GUI.color = Color.white;
+		DrawSpeakerIcon(sndRect, isGameAudioMuted);
+
+		if (GUI.Button(sndRect, GUIContent.none, GUIStyle.none))
+		{
+			isGameAudioMuted = !isGameAudioMuted;
+			AudioListener.pause = isGameAudioMuted;
+			Interface_Game.addInfoPlayerNormal(isGameAudioMuted ? "Đã tắt âm thanh game" : "Đã bật âm thanh game", mFont.tahoma_7_yellow);
+		}
+
+		curX = sndRect.xMax + pad;
+
+		// 2. Draw Voice Chat Speaker Button (Loa Mic)
+		Rect voiceSndRect = _pillRectCache[PILL_RECT_VOICE];
+		voiceSndRect.x = curX;
+		voiceSndRect.y = curY;
+		voiceSndRect.width = btnSize;
+		voiceSndRect.height = btnSize;
+		_pillRectCache[PILL_RECT_VOICE] = voiceSndRect;
+		bool isConnected = _cachedVivoxRef != null && !string.IsNullOrEmpty(_cachedVivoxRef.CurrentChannelName);
+		bool isVoiceMuted = _cachedVivoxRef != null && _cachedVivoxRef.IsOutputMuted;
+
+		Color voiceSndBgColor;
+		if (isConnected)
+			voiceSndBgColor = isVoiceMuted ? new Color(0.85f, 0.2f, 0.2f, 0.9f) : new Color(0.1f, 0.7f, 0.8f, 0.9f);
+		else
+			voiceSndBgColor = new Color(0.35f, 0.35f, 0.35f, 0.7f);
+
+		GUI.color = voiceSndBgColor;
+		GUI.DrawTexture(voiceSndRect, cachedCircleWhite);
+
+		GUI.color = Color.white;
+		DrawSpeakerIcon(voiceSndRect, !isConnected || isVoiceMuted);
+
+		if (GUI.Button(voiceSndRect, GUIContent.none, GUIStyle.none))
+		{
+			if (isConnected)
+			{
+				_cachedVivoxRef.ToggleOutputMute();
+				Interface_Game.addInfoPlayerNormal(_cachedVivoxRef.IsOutputMuted ? "Đã tắt loa đàm thoại" : "Đã bật loa đàm thoại", mFont.tahoma_7_yellow);
+			}
+			else
+			{
+				Interface_Game.addInfoPlayerNormal("Đang kết nối thoại vui lòng chờ 5 giây...", mFont.tahoma_7_yellow);
+				_ = _cachedVivoxRef.JoinVoiceChannelAsync("GameRoom_1");
+			}
+		}
+
+		curX = voiceSndRect.xMax + pad;
+
+		// 3. Draw Mic Button
+		Rect micRect = _pillRectCache[PILL_RECT_MIC];
+		micRect.x = curX;
+		micRect.y = curY;
+		micRect.width = btnSize;
+		micRect.height = btnSize;
+		_pillRectCache[PILL_RECT_MIC] = micRect;
+		bool isMuted = _cachedVivoxRef != null && _cachedVivoxRef.IsMuted;
+
+		Color micBgColor;
+		if (micClickFeedbackTick > 0)
+			micBgColor = new Color(0.95f, 0.6f, 0.1f, 0.8f);
+		else if (isConnected)
+			micBgColor = isMuted ? new Color(0.85f, 0.2f, 0.2f, 0.9f) : new Color(0.1f, 0.75f, 0.3f, 0.9f);
+		else
+			micBgColor = new Color(0.35f, 0.35f, 0.35f, 0.7f);
+
+		GUI.color = micBgColor;
+		GUI.DrawTexture(micRect, cachedCircleWhite);
+
+		GUI.color = Color.white;
+		DrawMicIcon(micRect, !isConnected || isMuted);
+
+		if (GUI.Button(micRect, GUIContent.none, GUIStyle.none))
+		{
+			micClickFeedbackTick = 45;
+			if (isConnected)
+			{
+				_cachedVivoxRef.ToggleMute();
+				Interface_Game.addInfoPlayerNormal(_cachedVivoxRef.IsMuted ? "Đã tắt mic truyền giọng" : "Đã bật mic truyền giọng", mFont.tahoma_7_yellow);
+			}
+			else
+			{
+				Interface_Game.addInfoPlayerNormal("Đang khởi động mic vui lòng chờ 5 giây...", mFont.tahoma_7_yellow);
+				_ = _cachedVivoxRef.JoinVoiceChannelAsync("GameRoom_1");
+			}
+		}
+
+		curX = micRect.xMax + 10f * baseScale;
+
+		// Vertical Separator
+		GUI.color = new Color(1f, 1f, 1f, 0.15f);
+		Rect sepRect = _pillRectCache[PILL_RECT_SEPARATOR];
+		sepRect.x = curX;
+		sepRect.y = startY + pad;
+		sepRect.width = 1f;
+		sepRect.height = pillHeight - pad * 2f;
+		_pillRectCache[PILL_RECT_SEPARATOR] = sepRect;
+		GUI.DrawTexture(sepRect, Texture2D.whiteTexture);
+		GUI.color = Color.white;
+
+		curX += 10f * baseScale;
+
+		// Speed Decrease [-]
+		Rect decRect = _pillRectCache[PILL_RECT_DEC];
+		decRect.x = curX;
+		decRect.y = curY;
+		decRect.width = btnSize;
+		decRect.height = btnSize;
+		_pillRectCache[PILL_RECT_DEC] = decRect;
+
+		bool isHoverDec = decRect.Contains(Event.current.mousePosition);
+		GUI.color = isHoverDec ? new Color(1f, 1f, 1f, 0.25f) : new Color(1f, 1f, 1f, 0.12f);
+		GUI.DrawTexture(decRect, cachedRoundedBoxWhite);
+
+		GUI.color = Color.white;
+		Rect decLabelRect = _pillRectCache[PILL_RECT_TMP1];
+		decLabelRect.x = decRect.x;
+		decLabelRect.y = decRect.y - 1f * baseScale;
+		decLabelRect.width = decRect.width;
+		decLabelRect.height = decRect.height;
+		_pillRectCache[PILL_RECT_TMP1] = decLabelRect;
+		GUI.Label(decLabelRect, "-", GetButtonStyle((int)(14f * baseScale)));
+
+		if (GUI.Button(decRect, GUIContent.none, GUIStyle.none))
+		{
+			gameSpeed = Mathf.Max(0.1f, gameSpeed - 0.1f);
+			Time.timeScale = gameSpeed;
+			cachedSpeedValue = -1f;
+			Interface_Game.addInfoPlayerNormal("Tốc độ game: " + System.Math.Round(gameSpeed, 1) + "x", mFont.tahoma_7_yellow);
+		}
+
+		curX = decRect.xMax + pad;
+
+		// Speed Label
+		float lblWidth = 55f * baseScale;
+		Rect lblRect = _pillRectCache[PILL_RECT_LBL];
+		lblRect.x = curX;
+		lblRect.y = curY;
+		lblRect.width = lblWidth;
+		lblRect.height = btnSize;
+		_pillRectCache[PILL_RECT_LBL] = lblRect;
+
+		if (cachedSpeedValue != gameSpeed)
+		{
+			cachedSpeedValue = gameSpeed;
+			string platformStr = GameMidlet.isPC ? "PC" : "Mobile";
+			cachedSpeedLabel = System.Math.Round(gameSpeed, 1) + "x (" + platformStr + ")";
+		}
+
+		GUI.Label(lblRect, cachedSpeedLabel, GetCenteredStyle((int)(11f * baseScale)));
+
+		curX = lblRect.xMax + pad;
+
+		// Speed Increase [+]
+		Rect incRect = _pillRectCache[PILL_RECT_INC];
+		incRect.x = curX;
+		incRect.y = curY;
+		incRect.width = btnSize;
+		incRect.height = btnSize;
+		_pillRectCache[PILL_RECT_INC] = incRect;
+
+		bool isHoverInc = incRect.Contains(Event.current.mousePosition);
+		GUI.color = isHoverInc ? new Color(1f, 1f, 1f, 0.25f) : new Color(1f, 1f, 1f, 0.12f);
+		GUI.DrawTexture(incRect, cachedRoundedBoxWhite);
+
+		GUI.color = Color.white;
+		Rect incLabelRect = _pillRectCache[PILL_RECT_TMP2];
+		incLabelRect.x = incRect.x;
+		incLabelRect.y = incRect.y - 1f * baseScale;
+		incLabelRect.width = incRect.width;
+		incLabelRect.height = incRect.height;
+		_pillRectCache[PILL_RECT_TMP2] = incLabelRect;
+		GUI.Label(incLabelRect, "+", GetButtonStyle((int)(13f * baseScale)));
+
+		if (GUI.Button(incRect, GUIContent.none, GUIStyle.none))
+		{
+			gameSpeed = Mathf.Min(3.0f, gameSpeed + 0.1f);
+			Time.timeScale = gameSpeed;
+			cachedSpeedValue = -1f;
+			Interface_Game.addInfoPlayerNormal("Tốc độ game: " + System.Math.Round(gameSpeed, 1) + "x", mFont.tahoma_7_yellow);
+		}
+	}
+
+	private static void SetCachedColor(int slot, Color c)
+	{
+		_pillColorCache[slot] = c;
+	}
+
+	private static GUIStyle GetCenteredStyle(int fontSize)
+	{
+		if (cachedCenteredStyle == null)
+		{
+			cachedCenteredStyle = new GUIStyle(GUI.skin.label);
+			cachedCenteredStyle.alignment = TextAnchor.MiddleCenter;
+			cachedCenteredStyle.fontStyle = FontStyle.Bold;
+			cachedCenteredStyle.normal.textColor = Color.white;
+		}
+		cachedCenteredStyle.fontSize = fontSize;
+		return cachedCenteredStyle;
+	}
+
+	private static GUIStyle GetButtonStyle(int fontSize)
+	{
+		if (cachedButtonStyle == null)
+		{
+			cachedButtonStyle = new GUIStyle(GUI.skin.label);
+			cachedButtonStyle.alignment = TextAnchor.MiddleCenter;
+			cachedButtonStyle.fontStyle = FontStyle.Bold;
+			cachedButtonStyle.normal.textColor = Color.white;
+		}
+		cachedButtonStyle.fontSize = fontSize;
+		return cachedButtonStyle;
+	}
+
+	private static void DrawSpeakerIcon(Rect rect, bool drawSlash)
+	{
+		Color savedColor = GUI.color;
+		GUI.color = Color.white;
+		float u = rect.width / 52f;
+
+		Rect r1 = _pillRectCache[PILL_RECT_TMP1];
+		r1.x = rect.x + 14f * u; r1.y = rect.y + 18f * u; r1.width = 10f * u; r1.height = 16f * u;
+		_pillRectCache[PILL_RECT_TMP1] = r1;
+		GUI.DrawTexture(r1, Texture2D.whiteTexture);
+
+		Rect r2 = _pillRectCache[PILL_RECT_TMP2];
+		r2.x = rect.x + 24f * u; r2.y = rect.y + 14f * u; r2.width = 4f * u; r2.height = 24f * u;
+		_pillRectCache[PILL_RECT_TMP2] = r2;
+		GUI.DrawTexture(r2, Texture2D.whiteTexture);
+
+		Rect r3 = _pillRectCache[PILL_RECT_TMP3];
+		r3.x = rect.x + 28f * u; r3.y = rect.y + 11f * u; r3.width = 4f * u; r3.height = 30f * u;
+		_pillRectCache[PILL_RECT_TMP3] = r3;
+		GUI.DrawTexture(r3, Texture2D.whiteTexture);
+
+		if (!drawSlash)
+		{
+			Rect r4 = _pillRectCache[PILL_RECT_TMP4];
+			r4.x = rect.x + 35f * u; r4.y = rect.y + 20f * u; r4.width = 3f * u; r4.height = 12f * u;
+			_pillRectCache[PILL_RECT_TMP4] = r4;
+			GUI.DrawTexture(r4, Texture2D.whiteTexture);
+
+			// Tái sử dụng TMP1 slot cho wave 2
+			Rect r5 = _pillRectCache[PILL_RECT_TMP1];
+			r5.x = rect.x + 40f * u; r5.y = rect.y + 16f * u; r5.width = 3f * u; r5.height = 20f * u;
+			_pillRectCache[PILL_RECT_TMP1] = r5;
+			GUI.DrawTexture(r5, Texture2D.whiteTexture);
+		}
+
+		if (drawSlash)
+		{
+			_scratchMatrix = GUI.matrix;
+			GUIUtility.RotateAroundPivot(-36f, rect.center);
+			Rect rs = _pillRectCache[PILL_RECT_TMP4];
+			rs.x = rect.x + 10f * u; rs.y = rect.y + 24f * u; rs.width = 32f * u; rs.height = 4f * u;
+			_pillRectCache[PILL_RECT_TMP4] = rs;
+			GUI.DrawTexture(rs, Texture2D.whiteTexture);
+			GUI.matrix = _scratchMatrix;
+		}
+		GUI.color = savedColor;
+	}
+
+	private static void DrawMicIcon(Rect micRect, bool drawSlash)
+	{
+		Color savedColor = GUI.color;
+		GUI.color = Color.white;
+		float unit = micRect.width / 52f;
+
+		Rect head = _pillRectCache[PILL_RECT_TMP1];
+		head.x = micRect.x + 20f * unit; head.y = micRect.y + 12f * unit; head.width = 12f * unit; head.height = 18f * unit;
+		_pillRectCache[PILL_RECT_TMP1] = head;
+
+		Rect body = _pillRectCache[PILL_RECT_TMP2];
+		body.x = head.x; body.y = head.y + 6f * unit; body.width = head.width; body.height = 13f * unit;
+		_pillRectCache[PILL_RECT_TMP2] = body;
+
+		GUI.DrawTexture(head, cachedCircleWhite);
+		GUI.DrawTexture(body, Texture2D.whiteTexture);
+
+		Rect r1 = _pillRectCache[PILL_RECT_TMP3];
+		r1.x = micRect.x + 16f * unit; r1.y = micRect.y + 26f * unit; r1.width = 20f * unit; r1.height = 4f * unit;
+		_pillRectCache[PILL_RECT_TMP3] = r1;
+		GUI.DrawTexture(r1, Texture2D.whiteTexture);
+
+		Rect r2 = _pillRectCache[PILL_RECT_TMP4];
+		r2.x = micRect.x + 24f * unit; r2.y = micRect.y + 29f * unit; r2.width = 4f * unit; r2.height = 9f * unit;
+		_pillRectCache[PILL_RECT_TMP4] = r2;
+		GUI.DrawTexture(r2, Texture2D.whiteTexture);
+
+		Rect r3 = _pillRectCache[PILL_RECT_TMP1];
+		r3.x = micRect.x + 18f * unit; r3.y = micRect.y + 38f * unit; r3.width = 16f * unit; r3.height = 4f * unit;
+		_pillRectCache[PILL_RECT_TMP1] = r3;
+		GUI.DrawTexture(r3, Texture2D.whiteTexture);
+
+		if (drawSlash)
+		{
+			_scratchMatrix = GUI.matrix;
+			GUIUtility.RotateAroundPivot(-36f, micRect.center);
+			Rect rs = _pillRectCache[PILL_RECT_TMP4];
+			rs.x = micRect.x + 10f * unit; rs.y = micRect.y + 24f * unit; rs.width = 32f * unit; rs.height = 5f * unit;
+			_pillRectCache[PILL_RECT_TMP4] = rs;
+			GUI.DrawTexture(rs, Texture2D.whiteTexture);
+			GUI.matrix = _scratchMatrix;
+		}
+		GUI.color = savedColor;
+	}
+
+	private void HandleVoiceChatInput()
+	{
+		try
+		{
+			if (Input.GetKeyDown(KeyCode.J))
+			{
+				if (_cachedVivoxRef == null) _cachedVivoxRef = VivoxManager.Instance;
+				if (_cachedVivoxRef == null) return;
+				if (string.IsNullOrEmpty(_cachedVivoxRef.CurrentChannelName))
+					_ = _cachedVivoxRef.JoinVoiceChannelAsync("GameRoom_1");
+				else
+					_ = _cachedVivoxRef.LeaveChannelAsync();
+			}
+			if (Input.GetKeyDown(KeyCode.V))
+			{
+				if (_cachedVivoxRef != null)
+				{
+					_cachedVivoxRef.ToggleMute();
+					Interface_Game.addInfoPlayerNormal(_cachedVivoxRef.IsMuted ? "Đã tắt mic truyền giọng" : "Đã bật mic truyền giọng", mFont.tahoma_7_yellow);
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.B))
+			{
+				if (_cachedVivoxRef != null)
+				{
+					_cachedVivoxRef.ToggleOutputMute();
+					Interface_Game.addInfoPlayerNormal(_cachedVivoxRef.IsOutputMuted ? "Đã tắt loa đàm thoại" : "Đã bật loa đàm thoại", mFont.tahoma_7_yellow);
+				}
+			}
+			if (Input.GetKeyDown(KeyCode.M))
+			{
+				mSound.isMusic = !mSound.isMusic;
+				if (!mSound.isMusic)
+				{
+					mSound.stopAll();
+				}
+				else
+				{
+					mSound.idCurent = -1;
+					LoadMapScreen.PlayMusicLang();
+				}
+				Interface_Game.addInfoPlayerNormal(mSound.isMusic ? "Đã bật nhạc nền game" : "Đã tắt nhạc nền game", mFont.tahoma_7_yellow);
+				CRes.saveRMS("MAIN_SOUND", new sbyte[2]
+				{
+					(sbyte)(mSound.isMusic ? 1 : 0),
+					(sbyte)(mSound.isSound ? 1 : 0)
+				});
+			}
+			if (Input.GetKeyDown(KeyCode.N))
+			{
+				mSound.isSound = !mSound.isSound;
+				Interface_Game.addInfoPlayerNormal(mSound.isSound ? "Đã bật âm thanh hiệu ứng" : "Đã tắt âm thanh hiệu ứng", mFont.tahoma_7_yellow);
+				CRes.saveRMS("MAIN_SOUND", new sbyte[2]
+				{
+					(sbyte)(mSound.isMusic ? 1 : 0),
+					(sbyte)(mSound.isSound ? 1 : 0)
+				});
+			}
+		}
+		catch (Exception) {}
 	}
 
 	private void Update()
@@ -452,6 +907,7 @@ public class Main : MonoBehaviour
 		if (count >= 10)
 		{
 			Session_ME.update();
+			HandleVoiceChatInput();
 		}
 		checkMouseInput();
 	}
@@ -471,24 +927,24 @@ public class Main : MonoBehaviour
 		{
 			valueKey = 1;
 			Vector3 mousePosition = Input.mousePosition;
-			GameMidlet.gameCanvas.onPointerPressed((int)(mousePosition.x / (float)mGraphics.zoomLevel), (int)(((float)Screen.height - mousePosition.y) / (float)mGraphics.zoomLevel) + mGraphics.addYWhenOpenKeyBoard);
-			lastMousePos.x = mousePosition.x / (float)mGraphics.zoomLevel;
-			lastMousePos.y = mousePosition.y / (float)mGraphics.zoomLevel + (float)mGraphics.addYWhenOpenKeyBoard;
+			GameMidlet.gameCanvas.onPointerPressed(ScaleGUI.toGameX(mousePosition.x), ScaleGUI.toGameY(mousePosition.y));
+			lastMousePos.x = ScaleGUI.toGameX(mousePosition.x);
+			lastMousePos.y = ScaleGUI.toGameY(mousePosition.y);
 		}
 		if (Input.GetMouseButton(0))
 		{
 			Vector3 mousePosition2 = Input.mousePosition;
-			GameMidlet.gameCanvas.onPointerDragged((int)(mousePosition2.x / (float)mGraphics.zoomLevel), (int)(((float)Screen.height - mousePosition2.y) / (float)mGraphics.zoomLevel) + mGraphics.addYWhenOpenKeyBoard);
-			lastMousePos.x = mousePosition2.x / (float)mGraphics.zoomLevel;
-			lastMousePos.y = mousePosition2.y / (float)mGraphics.zoomLevel + (float)mGraphics.addYWhenOpenKeyBoard;
+			GameMidlet.gameCanvas.onPointerDragged(ScaleGUI.toGameX(mousePosition2.x), ScaleGUI.toGameY(mousePosition2.y));
+			lastMousePos.x = ScaleGUI.toGameX(mousePosition2.x);
+			lastMousePos.y = ScaleGUI.toGameY(mousePosition2.y);
 		}
 		if (Input.GetMouseButtonUp(0) && valueKey == 1)
 		{
 			valueKey = 0;
 			Vector3 mousePosition3 = Input.mousePosition;
-			lastMousePos.x = mousePosition3.x / (float)mGraphics.zoomLevel;
-			lastMousePos.y = mousePosition3.y / (float)mGraphics.zoomLevel + (float)mGraphics.addYWhenOpenKeyBoard;
-			GameMidlet.gameCanvas.onPointerReleased((int)(mousePosition3.x / (float)mGraphics.zoomLevel), (int)(((float)Screen.height - mousePosition3.y) / (float)mGraphics.zoomLevel) + mGraphics.addYWhenOpenKeyBoard);
+			lastMousePos.x = ScaleGUI.toGameX(mousePosition3.x);
+			lastMousePos.y = ScaleGUI.toGameY(mousePosition3.y);
+			GameMidlet.gameCanvas.onPointerReleased(ScaleGUI.toGameX(mousePosition3.x), ScaleGUI.toGameY(mousePosition3.y));
 		}
 	}
 
@@ -544,6 +1000,7 @@ public class Main : MonoBehaviour
 
 	private void OnLowMemory()
 	{
+		Image.clearCache();
 		Resources.UnloadUnusedAssets();
 		System.GC.Collect();
 	}
@@ -566,19 +1023,37 @@ public class Main : MonoBehaviour
 		isResume = false;
 		if (paused)
 		{
-#if UNITY_IOS
+#if UNITY_IOS || UNITY_ANDROID
 			Application.targetFrameRate = 15;
 			Resources.UnloadUnusedAssets();
 #endif
 			isQuitApp = false;
+			// Khi background: tắt mic input + voice output để tiết kiệm pin & tránh leak native
+			if (_cachedVivoxRef != null && _cachedVivoxRef.IsLoggedIn)
+			{
+				try { Unity.Services.Vivox.VivoxService.Instance.MuteInputDevice(); } catch (Exception) { }
+				try { Unity.Services.Vivox.VivoxService.Instance.MuteOutputDevice(); } catch (Exception) { }
+			}
 		}
 		else
 		{
 			isResume = true;
 			Time.timeScale = gameSpeed;
-#if UNITY_IOS
+#if UNITY_IOS || UNITY_ANDROID
 			Application.targetFrameRate = 60;
 #endif
+			// Resume: khôi phục theo đúng trạng thái mute trước đó
+			if (_cachedVivoxRef != null && _cachedVivoxRef.IsLoggedIn)
+			{
+				if (!_cachedVivoxRef.IsMuted)
+				{
+					try { Unity.Services.Vivox.VivoxService.Instance.UnmuteInputDevice(); } catch (Exception) { }
+				}
+				if (!_cachedVivoxRef.IsOutputMuted)
+				{
+					try { Unity.Services.Vivox.VivoxService.Instance.UnmuteOutputDevice(); } catch (Exception) { }
+				}
+			}
 		}
 		if (TouchScreenKeyboard.visible)
 		{
@@ -641,3 +1116,12 @@ public class Main : MonoBehaviour
 		return false;
 	}
 }
+
+
+
+
+
+
+
+
+

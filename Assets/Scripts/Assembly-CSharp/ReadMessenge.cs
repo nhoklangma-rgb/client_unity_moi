@@ -9930,9 +9930,9 @@ public class ReadMessenge : AvMain
 				{
 					string name = msg.reader().readUTF();
 					short time = msg.reader().readShort();
-					int tongXiu2 = msg.reader().readInt();
-					int tongTai2 = msg.reader().readInt();
-					int daCuoc2 = msg.reader().readInt();
+					long tongXiu2 = msg.reader().readLong();
+					long tongTai2 = msg.reader().readLong();
+					long daCuoc2 = msg.reader().readLong();
 					sbyte cua2 = msg.reader().readByte();
 					sbyte kq = msg.reader().readByte();
 					sbyte x = msg.reader().readByte();
@@ -9945,9 +9945,9 @@ public class ReadMessenge : AvMain
 				}
 				case 1:
 				{
-					int tongXiu = msg.reader().readInt();
-					int tongTai = msg.reader().readInt();
-					int daCuoc = msg.reader().readInt();
+					long tongXiu = msg.reader().readLong();
+					long tongTai = msg.reader().readLong();
+					long daCuoc = msg.reader().readLong();
 					sbyte cua = msg.reader().readByte();
 					TaiXiuScreen.instance.SetDatCuoc(tongTai, tongXiu, daCuoc, cua);
 					break;
@@ -9963,8 +9963,8 @@ public class ReadMessenge : AvMain
 				}
 				case 3:
 				{
-					int tongXiu3 = msg.reader().readInt();
-					int tongTai3 = msg.reader().readInt();
+					long tongXiu3 = msg.reader().readLong();
+					long tongTai3 = msg.reader().readLong();
 					TaiXiuScreen.instance.SetUpdateTaiXiu(tongTai3, tongXiu3);
 					break;
 				}

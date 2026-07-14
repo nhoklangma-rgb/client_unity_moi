@@ -3,6 +3,18 @@ using System;
 
 public class GameScreen : MainScreen
 {
+	private const int MAX_FIRE_MESSAGES_PER_FRAME = 8;
+
+	private const int MAX_FIRE_MESSAGES = 64;
+
+	private const int MAX_PENDING_EFFECTS_PER_FRAME = 12;
+
+	private const int MAX_PENDING_EFFECTS = 96;
+
+	private const int MAX_NUM_EFFECTS = 48;
+
+	private const int MAX_HIGH_DATA_EFFECTS = 64;
+
 	public static iCommand[] listCmdTest;
 
 	public static Player player = new Player();
@@ -1989,6 +2001,7 @@ public class GameScreen : MainScreen
 				if (dataSkillEff.wantDestroy)
 				{
 					vecHighDataEff.removeElementAt(l);
+					l--;
 				}
 			}
 		}
@@ -1998,7 +2011,7 @@ public class GameScreen : MainScreen
 			MainEffect mainEffect = (MainEffect)VecEffect.elementAt(m);
 			if (mainEffect == null || mainEffect.isRemove)
 			{
-				VecEffect.removeElementAt(m);
+				VecEffect.swapRemoveAt(m);
 				m--;
 			}
 			else if (!mainEffect.isStop)
@@ -2013,6 +2026,11 @@ public class GameScreen : MainScreen
 			if (mainEffect2 != null && !mainEffect2.isRemove && !mainEffect2.isStop)
 			{
 				mainEffect2.update();
+			}
+			else
+			{
+				VecNum.swapRemoveAt(n);
+				n--;
 			}
 		}
 		if (tickPvP > 0)
@@ -2087,7 +2105,11 @@ public class GameScreen : MainScreen
 			objFocus = null;
 			center = null;
 		}
-		int num3 = vecEffTam.size();
+		while (vecEffTam.size() > MAX_PENDING_EFFECTS)
+		{
+			vecEffTam.removeElementAt(0);
+		}
+		int num3 = Math.min(vecEffTam.size(), MAX_PENDING_EFFECTS_PER_FRAME);
 		for (int num4 = 0; num4 < num3; num4++)
 		{
 			MainEffect mainEffect3 = (MainEffect)vecEffTam.elementAt(0);
@@ -2502,10 +2524,41 @@ public class GameScreen : MainScreen
 		return result;
 	}
 
+	private static void addPendingEffect(MainEffect effect)
+	{
+		if (effect == null)
+		{
+			return;
+		}
+		while (vecEffTam.size() >= MAX_PENDING_EFFECTS)
+		{
+			vecEffTam.removeElementAt(0);
+		}
+		vecEffTam.addElement(effect);
+	}
+
+	private static bool canAddNumEffect()
+	{
+		return VecNum.size() < MAX_NUM_EFFECTS || find_Index_Stop(VecNum) < VecNum.size();
+	}
+
+	private static void addHighDataEffect(DataSkillEff effect)
+	{
+		if (effect == null || (GameCanvas.lowGraphic && vecHighDataEff.size() >= MAX_HIGH_DATA_EFFECTS / 2))
+		{
+			return;
+		}
+		while (vecHighDataEff.size() >= MAX_HIGH_DATA_EFFECTS)
+		{
+			vecHighDataEff.removeElementAt(0);
+		}
+		vecHighDataEff.addElement(effect);
+	}
+
 	public static void addLazer(sbyte type, int x, int y, int xto, int yto)
 	{
 		Lazer o = new Lazer(0, x, y, xto, yto);
-		vecEffTam.addElement(o);
+		addPendingEffect(o);
 	}
 
 	public static void addEffectEnd(short type, int subtype, int x, int y, int time, sbyte dir, MainObject objEff)
@@ -2513,7 +2566,7 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subtype, x, y, time, dir, objEff);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
@@ -2522,7 +2575,7 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subtype, x, y, dir, objEff);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
@@ -2531,7 +2584,7 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subtype, x, y, xTo, yTo, dir, objEff);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
@@ -2548,7 +2601,7 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subType, x, y, Id, cat, dir, objEff, 0);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
@@ -2557,7 +2610,7 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subType, x, y, Id, cat, idImage, dir, objEff, 0);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
@@ -2571,14 +2624,14 @@ public class GameScreen : MainScreen
 		if (objEff == player || checkAddEff())
 		{
 			Effect_End o = new Effect_End(type, (sbyte)subType, x, y, Id, cat, dir, objEff, time);
-			vecEffTam.addElement(o);
+			addPendingEffect(o);
 		}
 	}
 
 	public static void addEffectSkill(MainSkill skill, MainObject objkill, mVector vecObjsBeFire)
 	{
 		Effect_Skill o = new Effect_Skill(skill.typeEffSkill, skill.typeSub, objkill, vecObjsBeFire);
-		vecEffTam.addElement(o);
+		addPendingEffect(o);
 	}
 
 	public static void addEffectSkill2(short typeEffSkill, MainObject objkill, Object_Effect_Skill objbekill, int x, int y)
@@ -2586,23 +2639,27 @@ public class GameScreen : MainScreen
 		mVector mVector2 = new mVector();
 		mVector2.addElement(objbekill);
 		Effect_Skill o = new Effect_Skill(typeEffSkill, 0, objkill, mVector2, x, y);
-		vecEffTam.addElement(o);
+		addPendingEffect(o);
 	}
 
 	public static void addEffectSkill(MainSkill skill, MainObject objkill)
 	{
 		Effect_Skill o = new Effect_Skill(skill, objkill);
-		vecEffTam.addElement(o);
+		addPendingEffect(o);
 	}
 
 	public static void addEffectSkillSpec(MainSkill skill, MainObject objkill)
 	{
 		Effect_Skill o = new Effect_Skill(skill, objkill, skill.x, skill.y, skill.vecPos);
-		vecEffTam.addElement(o);
+		addPendingEffect(o);
 	}
 
 	public static void addEffectNum(string content, int x, int y, sbyte typeColor)
 	{
+		if (!canAddNumEffect())
+		{
+			return;
+		}
 		EffectNum effectNum = new EffectNum(content, x, y, typeColor);
 		int num = find_Index_Stop(VecNum);
 		if (num == VecNum.size())
@@ -2617,6 +2674,10 @@ public class GameScreen : MainScreen
 
 	public static void addEffectNumImage(string content, int x, int y, sbyte typeColor, FrameImage fra, int frame)
 	{
+		if (!canAddNumEffect())
+		{
+			return;
+		}
 		EffectNum effectNum = new EffectNum(content, x, y, typeColor, fra, frame);
 		int num = find_Index_Stop(VecNum);
 		if (num == VecNum.size())
@@ -2631,6 +2692,10 @@ public class GameScreen : MainScreen
 
 	public static void addEffectNumBig_NEW_AP(int value, int valueAP, int x, int y, sbyte typeColor)
 	{
+		if (!canAddNumEffect())
+		{
+			return;
+		}
 		EffectNum effectNum = new EffectNum(value, valueAP, x, y, typeColor);
 		int num = find_Index_Stop(VecNum);
 		if (num == VecNum.size())
@@ -2855,7 +2920,12 @@ public class GameScreen : MainScreen
 	{
 		try
 		{
-			for (int i = 0; i < vecObjFire.size(); i++)
+			while (vecObjFire.size() > MAX_FIRE_MESSAGES)
+			{
+				vecObjFire.removeElementAt(0);
+			}
+			int processedFireMessages = 0;
+			for (int i = 0; i < vecObjFire.size() && processedFireMessages < MAX_FIRE_MESSAGES_PER_FRAME; i++, processedFireMessages++)
 			{
 				Message message = (Message)vecObjFire.elementAt(i);
 				try
@@ -2869,7 +2939,9 @@ public class GameScreen : MainScreen
 					MainObject mainObject = MainObject.get_Object(iD, tem);
 					if (mainObject == null || (GameCanvas.lowGraphic && player != mainObject && MainObject.getDistance(player.x, player.y, mainObject.x, mainObject.y) >= 240))
 					{
-						break;
+						vecObjFire.removeElementAt(i);
+						i--;
+						continue;
 					}
 					if (mainObject.timeDragon <= 0)
 					{
@@ -2933,7 +3005,7 @@ public class GameScreen : MainScreen
 	public static void addHightDataeff(short type, int x, int y, int time)
 	{
 		DataSkillEff o = new DataSkillEff(type, x, y, time);
-		vecHighDataEff.addElement(o);
+		addHighDataEffect(o);
 	}
 
 	public static void addHightDataeff(short type, MainObject target, int time)
@@ -2944,7 +3016,7 @@ public class GameScreen : MainScreen
 		}
 		DataSkillEff o = new DataSkillEff(type, target.x, target.y - target.hOne / 2, time);
 		o.target = target;
-		vecHighDataEff.addElement(o);
+		addHighDataEffect(o);
 	}
 
 	public static void addHightDataeff(short type, int x, int y, short vx, short vy)
@@ -2952,18 +3024,18 @@ public class GameScreen : MainScreen
 		DataSkillEff o = new DataSkillEff(type, x, y);
 		o.vx = vx;
 		o.vy = vy;
-		vecHighDataEff.addElement(o);
+		addHighDataEffect(o);
 	}
 	public static void addHightDataeff(short type, int x, int y)
 	{
 		DataSkillEff o = new DataSkillEff(type, x, y);
-		vecHighDataEff.addElement(o);
+		addHighDataEffect(o);
 	}
 
 	public static void addHightDataeff(short type, int x, int y, bool changeFlip)
 	{
 		DataSkillEff o = new DataSkillEff(type, x, y, changeFlip);
-		vecHighDataEff.addElement(o);
+		addHighDataEffect(o);
 	}
 
 	public static ObjMove getObjMove(short id, sbyte cat)

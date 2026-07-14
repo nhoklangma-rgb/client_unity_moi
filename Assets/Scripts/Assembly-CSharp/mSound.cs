@@ -37,9 +37,18 @@ public class mSound
 
 	public static GameObject[] player;
 
+	// Cached AudioSource references for player[] GameObjects
+	private static AudioSource[] _playerSources;
+
+	// Cached Main Camera reference
+	private static GameObject _mainCamera;
+
 	public static int l1;
 
 	public static int idCurent = -1;
+
+	// Event for cross-thread signaling instead of Thread.Sleep polling
+	private static ManualResetEventSlim _statusEvent = new ManualResetEventSlim(false);
 
 	public static void stopAll()
 	{
@@ -58,6 +67,7 @@ public class mSound
 		gameObject.transform.position = Vector3.zero;
 		gameObject.AddComponent<AudioListener>();
 		SoundBGLoop = gameObject.AddComponent<AudioSource>();
+		_mainCamera = GameObject.Find("Main Camera");
 	}
 
 	public static void init(int musicID, int sID)
@@ -68,6 +78,7 @@ public class mSound
 			l1 = musicID;
 			player = new GameObject[musicID + sID];
 			music = new AudioClip[musicID + sID];
+			_playerSources = new AudioSource[musicID + sID];
 			for (int i = 0; i < player.Length; i++)
 			{
 				getAssetSoundFile((i < l1) ? ("/sound/m" + i) : ("/sound/s" + (i - l1)), i);
@@ -143,16 +154,16 @@ public class mSound
 	{
 		if (!(SoundRun == null))
 		{
-			SoundRun.GetComponent<AudioSource>().loop = true;
-			SoundRun.GetComponent<AudioSource>().clip = music[id];
-			SoundRun.GetComponent<AudioSource>().volume = volume;
-			SoundRun.GetComponent<AudioSource>().Play();
+			SoundRun.loop = true;
+			SoundRun.clip = music[id];
+			SoundRun.volume = volume;
+			SoundRun.Play();
 		}
 	}
 
 	public static void sTopSoundRun()
 	{
-		SoundRun.GetComponent<AudioSource>().Stop();
+		SoundRun.Stop();
 	}
 
 	public static bool isPlayingSound()
@@ -161,23 +172,23 @@ public class mSound
 		{
 			return false;
 		}
-		return SoundRun.GetComponent<AudioSource>().isPlaying;
+		return SoundRun.isPlaying;
 	}
 
 	public static void playSoundNatural(int id, float volume, bool isLoop)
 	{
 		if (!(SoundBGLoop == null))
 		{
-			SoundWater.GetComponent<AudioSource>().loop = isLoop;
-			SoundWater.GetComponent<AudioSource>().clip = music[id];
-			SoundWater.GetComponent<AudioSource>().volume = volume;
-			SoundWater.GetComponent<AudioSource>().Play();
+			SoundWater.loop = isLoop;
+			SoundWater.clip = music[id];
+			SoundWater.volume = volume;
+			SoundWater.Play();
 		}
 	}
 
 	public static void stopSoundNatural(int id)
 	{
-		SoundWater.GetComponent<AudioSource>().Stop();
+		SoundWater.Stop();
 	}
 
 	public static bool isPlayingSoundatural(int id)
@@ -186,7 +197,7 @@ public class mSound
 		{
 			return false;
 		}
-		return SoundWater.GetComponent<AudioSource>().isPlaying;
+		return SoundWater.isPlaying;
 	}
 
 	public static void playMus(int type, float vl, bool loop)
@@ -201,17 +212,17 @@ public class mSound
 	{
 		if (!(SoundBGLoop == null) && id != idCurent)
 		{
-			SoundBGLoop.GetComponent<AudioSource>().loop = true;
-			SoundBGLoop.GetComponent<AudioSource>().clip = music[id];
-			SoundBGLoop.GetComponent<AudioSource>().volume = volume;
-			SoundBGLoop.GetComponent<AudioSource>().Play();
+			SoundBGLoop.loop = true;
+			SoundBGLoop.clip = music[id];
+			SoundBGLoop.volume = volume;
+			SoundBGLoop.Play();
 			idCurent = id;
 		}
 	}
 
 	public static void sTopSoundBG(int id)
 	{
-		SoundBGLoop.GetComponent<AudioSource>().Stop();
+		SoundBGLoop.Stop();
 	}
 
 	public static bool isPlayingSoundBG(int id)
@@ -220,7 +231,7 @@ public class mSound
 		{
 			return false;
 		}
-		return SoundBGLoop.GetComponent<AudioSource>().isPlaying;
+		return SoundBGLoop.isPlaying;
 	}
 
 	public static void load(string filename, int pos)
@@ -244,29 +255,36 @@ public class mSound
 		}
 		filenametemp = filename;
 		postem = pos;
+		_statusEvent.Reset();
 		status = 2;
-		int i;
-		for (i = 0; i < 100; i++)
+		if (!_statusEvent.Wait(500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR LOAD AUDIO " + filename);
+				return;
 			}
 		}
-		if (i == 100)
-		{
-			Cout.LogError("TOO LONG FOR LOAD AUDIO " + filename);
-			return;
-		}
-		Cout.Log("Load Audio " + filename + " done in " + i * 5 + "ms");
+		Cout.Log("Load Audio " + filename + " done");
 	}
 
 	private static void __load(string filename, int pos)
 	{
 		music[pos] = (AudioClip)Resources.Load(filename, typeof(AudioClip));
-		GameObject.Find("Main Camera").AddComponent<AudioSource>();
-		player[pos] = GameObject.Find("Main Camera");
+		if (_mainCamera == null)
+			_mainCamera = GameObject.Find("Main Camera");
+		_mainCamera.AddComponent<AudioSource>();
+		player[pos] = _mainCamera;
+		// Cache the AudioSource for this player slot
+		_playerSources[pos] = _mainCamera.GetComponent<AudioSource>();
+	}
+
+	/// <summary>
+	/// Called from the main thread update loop to signal status completion.
+	/// </summary>
+	public static void signalStatusComplete()
+	{
+		_statusEvent.Set();
 	}
 
 	public static void start(float volume, int pos)
@@ -290,23 +308,14 @@ public class mSound
 		}
 		volumetem = volume;
 		postem = pos;
+		_statusEvent.Reset();
 		status = 3;
-		int i;
-		for (i = 0; i < 100; i++)
+		if (!_statusEvent.Wait(500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				// Debug.Log("TOO LONG FOR START AUDIO");
 			}
-		}
-		if (i == 100)
-		{
-			// Debug.Log("TOO LONG FOR START AUDIO");
-		}
-		else
-		{
-			// Debug.Log("Start Audio done in " + i * 5 + "ms");
 		}
 	}
 
@@ -314,7 +323,10 @@ public class mSound
 	{
 		if (!(player[pos] == null))
 		{
-			player[pos].GetComponent<AudioSource>().PlayOneShot(music[pos], volume);
+			AudioSource src = _playerSources != null && pos < _playerSources.Length && _playerSources[pos] != null
+				? _playerSources[pos]
+				: player[pos].GetComponent<AudioSource>();
+			src.PlayOneShot(music[pos], volume);
 		}
 	}
 
@@ -338,23 +350,14 @@ public class mSound
 			return;
 		}
 		postem = pos;
+		_statusEvent.Reset();
 		status = 4;
-		int i;
-		for (i = 0; i < 100; i++)
+		if (!_statusEvent.Wait(500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				// Debug.Log("TOO LONG FOR STOP AUDIO");
 			}
-		}
-		if (i == 100)
-		{
-			// Debug.Log("TOO LONG FOR STOP AUDIO");
-		}
-		else
-		{
-			// Debug.Log("Stop Audio done in " + i * 5 + "ms");
 		}
 	}
 
@@ -362,7 +365,10 @@ public class mSound
 	{
 		if (player[pos] != null)
 		{
-			player[pos].GetComponent<AudioSource>().Stop();
+			AudioSource src = _playerSources != null && pos < _playerSources.Length && _playerSources[pos] != null
+				? _playerSources[pos]
+				: player[pos].GetComponent<AudioSource>();
+			src.Stop();
 		}
 	}
 }

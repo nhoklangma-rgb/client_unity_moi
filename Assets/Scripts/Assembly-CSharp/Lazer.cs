@@ -126,6 +126,7 @@ public class Lazer : MainEffect
 	public override void removeEff()
 	{
 		isStop = true;
+		isRemove = true;
 		f = -1;
 	}
 }

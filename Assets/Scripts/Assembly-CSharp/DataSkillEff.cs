@@ -795,8 +795,13 @@ public class DataSkillEff
 		}
 		x += vx;
 		y += vy;
-		if (listFrame.size() <= 0 && sequence.Length == 0)
+		if (listFrame.size() <= 0 && (sequence == null || sequence.Length == 0))
 		{
+			return;
+		}
+		if (sequence == null || sequence.Length == 0)
+		{
+			wantDestroy = true;
 			return;
 		}
 		try
@@ -805,7 +810,7 @@ public class DataSkillEff
 			{
 			case 0:
 				f++;
-				if (f > sequence.Length)
+				if (f >= sequence.Length)
 				{
 					if (!canremove)
 					{
@@ -817,7 +822,7 @@ public class DataSkillEff
 				break;
 			case 1:
 				f++;
-				if (f > sequence.Length)
+				if (f >= sequence.Length)
 				{
 					f = 0;
 					wantDestroy = true;
@@ -826,7 +831,7 @@ public class DataSkillEff
 				break;
 			case 2:
 				f++;
-				if (f > sequence.Length)
+				if (f >= sequence.Length)
 				{
 					f = 0;
 				}
@@ -838,7 +843,7 @@ public class DataSkillEff
 				break;
 			case 3:
 				f++;
-				if (f > sequence.Length)
+				if (f >= sequence.Length)
 				{
 					if (waitLoop > 0)
 					{

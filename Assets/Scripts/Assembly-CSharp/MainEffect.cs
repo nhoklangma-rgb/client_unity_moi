@@ -383,6 +383,7 @@ public class MainEffect
 
 	public virtual void removeEff()
 	{
+		isRemove = true;
 	}
 
 	public virtual void stopUpdateNormal()

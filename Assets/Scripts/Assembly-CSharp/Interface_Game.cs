@@ -4,6 +4,63 @@ public class Interface_Game
 
 	public const sbyte TOUCH = 1;
 
+	// Procedural C# Button Backgrounds for TS, GM, Tele, Robin
+	private static UnityEngine.Texture2D texActive;
+	private static UnityEngine.Texture2D texInactive;
+	private static UnityEngine.Texture2D texTele;
+	private static UnityEngine.Texture2D texRobin;
+
+	private static UnityEngine.Texture2D CreateRoundedRectTexture(int w, int h, float r, UnityEngine.Color fillColor, UnityEngine.Color borderColor, float borderWidth)
+	{
+		UnityEngine.Texture2D texture = new UnityEngine.Texture2D(w, h, UnityEngine.TextureFormat.ARGB32, false);
+		texture.wrapMode = UnityEngine.TextureWrapMode.Clamp;
+		texture.filterMode = UnityEngine.FilterMode.Bilinear;
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				float cx = (x < r) ? r : ((x > w - r - 1) ? (w - r - 1) : x);
+				float cy = (y < r) ? r : ((y > h - r - 1) ? (h - r - 1) : y);
+				float dist = UnityEngine.Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+				
+				UnityEngine.Color pixelColor = UnityEngine.Color.clear;
+				if (dist <= r)
+				{
+					if (borderWidth > 0.05f && dist >= r - borderWidth)
+					{
+						float alpha = (r - dist) / borderWidth;
+						pixelColor = UnityEngine.Color.Lerp(borderColor, fillColor, alpha);
+					}
+					else
+					{
+						pixelColor = fillColor;
+					}
+				}
+				else if (dist <= r + 1f)
+				{
+					float alpha = 1f - (dist - r);
+					UnityEngine.Color edgeColor = borderColor;
+					edgeColor.a *= alpha;
+					pixelColor = edgeColor;
+				}
+				texture.SetPixel(x, y, pixelColor);
+			}
+		}
+		texture.Apply();
+		return texture;
+	}
+
+	private static void EnsureButtonTextures()
+	{
+		if (texActive == null)
+		{
+			texActive = CreateRoundedRectTexture(128, 64, 16f, new UnityEngine.Color(0.18f, 0.75f, 0.35f, 0.9f), new UnityEngine.Color(1f, 1f, 1f, 0.25f), 2f);
+			texInactive = CreateRoundedRectTexture(128, 64, 16f, new UnityEngine.Color(0.18f, 0.18f, 0.18f, 0.75f), new UnityEngine.Color(1f, 1f, 1f, 0.15f), 2f);
+			texTele = CreateRoundedRectTexture(128, 64, 16f, new UnityEngine.Color(0.15f, 0.55f, 0.9f, 0.85f), new UnityEngine.Color(1f, 1f, 1f, 0.25f), 2f);
+			texRobin = CreateRoundedRectTexture(128, 64, 16f, new UnityEngine.Color(0.6f, 0.2f, 0.7f, 0.85f), new UnityEngine.Color(1f, 1f, 1f, 0.25f), 2f);
+		}
+	}
+
 	public static mImage[] imgMove;
 
 	public static mImage[] imgFire;
@@ -733,31 +790,25 @@ public class Interface_Game
 			}
 
 			// Button 1: TS
-			g.setColor(HAIRMOD.mAuto.Instance.isTanSat ? 0x00FF00 : 0x555555);
-			g.fillRect(x1, y1, wBtn, hBtn);
-			g.setColor(0xFFFFFF);
-			g.drawRect(x1, y1, wBtn, hBtn);
+			EnsureButtonTextures();
+			int z = mGraphics.zoomLevel;
+			UnityEngine.Rect r1 = new UnityEngine.Rect(x1 * z, y1 * z, wBtn * z, hBtn * z);
+			UnityEngine.GUI.DrawTexture(r1, HAIRMOD.mAuto.Instance.isTanSat ? texActive : texInactive);
 			mFont.tahoma_7b_white.drawString(g, "TS", x1 + wBtn / 2, y1 + 1, mFont.CENTER);
 
 			// Button 2: GM
-			g.setColor(HAIRMOD.mAuto.Instance.isGomQuai ? 0x00FF00 : 0x555555);
-			g.fillRect(x2, y2, wBtn, hBtn);
-			g.setColor(0xFFFFFF);
-			g.drawRect(x2, y2, wBtn, hBtn);
+			UnityEngine.Rect r2 = new UnityEngine.Rect(x2 * z, y2 * z, wBtn * z, hBtn * z);
+			UnityEngine.GUI.DrawTexture(r2, HAIRMOD.mAuto.Instance.isGomQuai ? texActive : texInactive);
 			mFont.tahoma_7b_white.drawString(g, "GM", x2 + wBtn / 2, y2 + 1, mFont.CENTER);
 
 			// Button 3: Tele
-			g.setColor(0x0088FF);
-			g.fillRect(x3, y3, wBtn, hBtn);
-			g.setColor(0xFFFFFF);
-			g.drawRect(x3, y3, wBtn, hBtn);
+			UnityEngine.Rect r3 = new UnityEngine.Rect(x3 * z, y3 * z, wBtn * z, hBtn * z);
+			UnityEngine.GUI.DrawTexture(r3, texTele);
 			mFont.tahoma_7b_white.drawString(g, "Tele", x3 + wBtn / 2, y3 + 1, mFont.CENTER);
 
 			// Button 4: RB
-			g.setColor(0x8B008B); // DarkMagenta
-			g.fillRect(x4, y4, wBtn, hBtn);
-			g.setColor(0xFFFFFF);
-			g.drawRect(x4, y4, wBtn, hBtn);
+			UnityEngine.Rect r4 = new UnityEngine.Rect(x4 * z, y4 * z, wBtn * z, hBtn * z);
+			UnityEngine.GUI.DrawTexture(r4, texRobin);
 			mFont.tahoma_7b_white.drawString(g, "RB", x4 + wBtn / 2, y4 + 1, mFont.CENTER);
 		}
 	}

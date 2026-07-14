@@ -64,11 +64,11 @@ public class TaiXiuScreen : LuckyScreen
 
 	private FrameImage fraXucXac;
 
-	private int tongTienTai = 1600000;
+	private long tongTienTai = 1600000L;
 
-	private int tongTienXiu = 160000;
+	private long tongTienXiu = 160000L;
 
-	private int daCuoc = 600000;
+	private long daCuoc = 600000L;
 
 	private short countDown = 60;
 
@@ -100,7 +100,7 @@ public class TaiXiuScreen : LuckyScreen
 
 	private int index3 = 2;
 
-	public TaiXiuScreen(string name, int tongTai, int tongXiu, int daCuoc, sbyte cua, short time)
+	public TaiXiuScreen(string name, long tongTai, long tongXiu, long daCuoc, sbyte cua, short time)
 	{
 		nameList = name;
 		tongTienTai = tongTai;
@@ -137,19 +137,19 @@ public class TaiXiuScreen : LuckyScreen
 		cmdDatCuocXiu = new iCommand(T.datCuoc, 121, this);
 		cmdTTTai = new iCommand(T.tatTay + " " + T.tai, 21, this);
 		cmdTTT1m = new iCommand(T.tatTay + " " + T.tai + " 10M", 31, this);
-		cmdTTT2m = new iCommand(T.tatTay + " " + T.tai + " 20M", 32, this);
-		cmdTTT3m = new iCommand(T.tatTay + " " + T.tai + " 50M", 33, this);
-		cmdTTT4m = new iCommand(T.tatTay + " " + T.tai + " 100M", 34, this);
-		cmdTTT5m = new iCommand(T.tatTay + " " + T.tai + " 200M", 35, this);
-		cmdTTT10m = new iCommand(T.tatTay + " " + T.tai + " 500M", 36, this);
+		cmdTTT2m = new iCommand(T.tatTay + " " + T.tai + " 30M", 32, this);
+		cmdTTT3m = new iCommand(T.tatTay + " " + T.tai + " 100M", 33, this);
+		cmdTTT4m = new iCommand(T.tatTay + " " + T.tai + " 500M", 34, this);
+		cmdTTT5m = new iCommand(T.tatTay + " " + T.tai + " 1B", 35, this);
+		cmdTTT10m = new iCommand(T.tatTay + " " + T.tai + " 10B", 36, this);
 		cmdTTT20m = new iCommand(T.tatTay + " " + T.tai + " 1B", 37, this);
 		cmdTTXiu = new iCommand(T.tatTay + " " + T.xiu, 22, this);
 		cmdTTX1m = new iCommand(T.tatTay + " " + T.xiu + " 10M", 41, this);
-		cmdTTX2m = new iCommand(T.tatTay + " " + T.xiu + " 20M", 42, this);
-		cmdTTX3m = new iCommand(T.tatTay + " " + T.xiu + " 50M", 43, this);
-		cmdTTX4m = new iCommand(T.tatTay + " " + T.xiu + " 100M", 44, this);
-		cmdTTX5m = new iCommand(T.tatTay + " " + T.xiu + " 200M", 45, this);
-		cmdTTX10m = new iCommand(T.tatTay + " " + T.xiu + " 500M", 46, this);
+		cmdTTX2m = new iCommand(T.tatTay + " " + T.xiu + " 30M", 42, this);
+		cmdTTX3m = new iCommand(T.tatTay + " " + T.xiu + " 100M", 43, this);
+		cmdTTX4m = new iCommand(T.tatTay + " " + T.xiu + " 500M", 44, this);
+		cmdTTX5m = new iCommand(T.tatTay + " " + T.xiu + " 1B", 45, this);
+		cmdTTX10m = new iCommand(T.tatTay + " " + T.xiu + " 10B", 46, this);
 		cmdTTX20m = new iCommand(T.tatTay + " " + T.xiu + " 1B", 47, this);
 		timeBegin = mSystem.currentTimeMillis();
 		timeUpdate = mSystem.currentTimeMillis();
@@ -348,7 +348,6 @@ public class TaiXiuScreen : LuckyScreen
 			mVector2.addElement(cmdTTT4m);
 			mVector2.addElement(cmdTTT5m);
 			mVector2.addElement(cmdTTT10m);
-			mVector2.addElement(cmdTTT20m);
 			GameCanvas.menu.startAt(mVector2, 2, T.tatTay + " " + T.tai);
 			break;
 		}
@@ -361,48 +360,47 @@ public class TaiXiuScreen : LuckyScreen
 			mVector2.addElement(cmdTTX4m);
 			mVector2.addElement(cmdTTX5m);
 			mVector2.addElement(cmdTTX10m);
-			mVector2.addElement(cmdTTX20m);
 			GameCanvas.menu.startAt(mVector2, 2, T.tatTay + " " + T.xiu);
 			break;
 		}
 		case 31:
-			GlobalService.gI().TaiXiu(0, 1, 10000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 10000000L, 1, 1);
 			break;
 		case 32:
-			GlobalService.gI().TaiXiu(0, 1, 20000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 30000000L, 1, 1);
 			break;
 		case 33:
-			GlobalService.gI().TaiXiu(0, 1, 50000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 100000000L, 1, 1);
 			break;
 		case 34:
-			GlobalService.gI().TaiXiu(0, 1, 100000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 500000000L, 1, 1);
 			break;
 		case 35:
-			GlobalService.gI().TaiXiu(0, 1, 200000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 1000000000L, 1, 1);
 			break;
 		case 36:
-			GlobalService.gI().TaiXiu(0, 1, 500000000, 1, 1);
+			GlobalService.gI().TaiXiu(0, 1, 10000000000L, 1, 1);
 			break;
 		case 37:
 			GlobalService.gI().TaiXiu(0, 1, 1000000000, 1, 1);
 			break;
 		case 41:
-			GlobalService.gI().TaiXiu(0, 1, 10000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 10000000L, 0, 1);
 			break;
 		case 42:
-			GlobalService.gI().TaiXiu(0, 1, 20000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 30000000L, 0, 1);
 			break;
 		case 43:
-			GlobalService.gI().TaiXiu(0, 1, 50000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 100000000L, 0, 1);
 			break;
 		case 44:
-			GlobalService.gI().TaiXiu(0, 1, 100000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 500000000L, 0, 1);
 			break;
 		case 45:
-			GlobalService.gI().TaiXiu(0, 1, 200000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 1000000000L, 0, 1);
 			break;
 		case 46:
-			GlobalService.gI().TaiXiu(0, 1, 500000000, 0, 1);
+			GlobalService.gI().TaiXiu(0, 1, 10000000000L, 0, 1);
 			break;
 		case 47:
 			GlobalService.gI().TaiXiu(0, 1, 1000000000, 0, 1);
@@ -568,7 +566,7 @@ public class TaiXiuScreen : LuckyScreen
 		index3 = x3 - 1;
 	}
 
-	public void SetDatCuoc(int tongTai, int tongXiu, int daCuoc, sbyte cua)
+	public void SetDatCuoc(long tongTai, long tongXiu, long daCuoc, sbyte cua)
 	{
 		tongTienTai = tongTai;
 		tongTienXiu = tongXiu;
@@ -576,7 +574,7 @@ public class TaiXiuScreen : LuckyScreen
 		this.cua = cua;
 	}
 
-	public void SetUpdateTaiXiu(int tongTai, int tongXiu)
+	public void SetUpdateTaiXiu(long tongTai, long tongXiu)
 	{
 		tongTienTai = tongTai;
 		tongTienXiu = tongXiu;

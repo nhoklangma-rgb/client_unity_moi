@@ -130,22 +130,18 @@ public class myReader
 	{
 		short num = readShort();
 		byte[] array = new byte[num];
-		for (int i = 0; i < num; i++)
-		{
-			array[i] = convertSbyteToByte(readSByte());
-		}
-		return new UTF8Encoding().GetString(array);
+		Buffer.BlockCopy(buffer, posRead, array, 0, num);
+		posRead += num;
+		return Encoding.UTF8.GetString(array);
 	}
 
 	public string readStringUTF()
 	{
 		short num = readShort();
 		byte[] array = new byte[num];
-		for (int i = 0; i < num; i++)
-		{
-			array[i] = convertSbyteToByte(readSByte());
-		}
-		return new UTF8Encoding().GetString(array);
+		Buffer.BlockCopy(buffer, posRead, array, 0, num);
+		posRead += num;
+		return Encoding.UTF8.GetString(array);
 	}
 
 	public string readUTF()

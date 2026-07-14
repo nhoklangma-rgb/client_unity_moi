@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 
 public class FristLoginScreen : MainScreen
 {
@@ -62,6 +63,8 @@ public class FristLoginScreen : MainScreen
 		GameScreen.player = null;
 		Session_ME.gI().close();
 		idCommand = 0;
+		// Pre-warm mic permission & Vivox init ở màn hình chờ → user bấm voice mic đầu tiên sẽ không bị giật
+		PreWarmVoiceChat();
 		if (!GameCanvas.isTouch || GameCanvas.isTouchAndKey())
 		{
 			for (int i = 0; i < vecCmd.size(); i++)
@@ -84,6 +87,20 @@ public class FristLoginScreen : MainScreen
 		LoginScreen.loadCharPart();
 		base.Show();
 		mSound.playMus(3, mSound.volumeMusic, loop: true);
+	}
+
+	private void PreWarmVoiceChat()
+	{
+		try
+		{
+			VivoxManager vm = VivoxManager.Instance;
+			if (vm == null) return;
+			vm.RequestMicrophonePermission();
+			_ = vm.InitAsync();
+		}
+		catch (Exception)
+		{
+		}
 	}
 
 	public override void setxyPlus12()

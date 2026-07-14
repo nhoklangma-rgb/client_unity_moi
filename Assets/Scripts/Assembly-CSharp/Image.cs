@@ -39,6 +39,9 @@ public class Image
 
 	public static int iA;
 
+	// Event-based signaling instead of Thread.Sleep polling
+	private static ManualResetEventSlim _statusEvent = new ManualResetEventSlim(false);
+
 	public static Image createEmptyImage()
 	{
 		return __createEmptyImage();
@@ -111,14 +114,41 @@ public class Image
 		return result;
 	}
 
+	private static System.Collections.Generic.Dictionary<string, Image> _imageCache = new System.Collections.Generic.Dictionary<string, Image>();
+	private static System.Collections.Generic.Dictionary<string, Image> _imageCacheX = new System.Collections.Generic.Dictionary<string, Image>();
+
+	public static void clearCache()
+	{
+		_imageCache.Clear();
+		_imageCacheX.Clear();
+	}
+
 	public static Image createImageUni(string filename)
 	{
-		return __createImage(filename);
+		if (_imageCache.TryGetValue(filename, out Image img))
+		{
+			return img;
+		}
+		Image loaded = __createImage(filename);
+		if (loaded != null)
+		{
+			_imageCache[filename] = loaded;
+		}
+		return loaded;
 	}
 
 	public static Image createImageX(string filename)
 	{
-		return __createImageX(filename);
+		if (_imageCacheX.TryGetValue(filename, out Image img))
+		{
+			return img;
+		}
+		Image loaded = __createImageX(filename);
+		if (loaded != null)
+		{
+			_imageCacheX[filename] = loaded;
+		}
+		return loaded;
 	}
 
 	public static Image createImage(byte[] imageData)
@@ -215,36 +245,42 @@ public class Image
 			status = 1;
 			imgTemp = __createEmptyImage();
 			status = 0;
+			_statusEvent.Set();
 		}
 		else if (status == 3)
 		{
 			status = 1;
 			imgTemp = __createImage(filenametemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 		else if (status == 4)
 		{
 			status = 1;
 			imgTemp = __createImage(datatemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 		else if (status == 5)
 		{
 			status = 1;
 			imgTemp = __createImage(imgSrcTemp, xtemp, ytemp, wtemp, htemp, transformtemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 		else if (status == 6)
 		{
 			status = 1;
 			imgTemp = __createImage(wtemp, htemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 		else if (status == 7)
 		{
 			status = 1;
 			imgTemp = __createImage(filenametemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 	}
 
@@ -256,20 +292,15 @@ public class Image
 			return null;
 		}
 		imgTemp = null;
+		_statusEvent.Reset();
 		status = 2;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE EMPTY IMAGE");
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE EMPTY IMAGE");
-			status = 0;
 		}
 		return imgTemp;
 	}
@@ -283,20 +314,15 @@ public class Image
 		}
 		imgTemp = null;
 		filenametemp = filename;
+		_statusEvent.Reset();
 		status = 3;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE IMAGE " + filename);
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE " + filename);
-			status = 0;
 		}
 		return imgTemp;
 	}
@@ -310,20 +336,15 @@ public class Image
 		}
 		imgTemp = null;
 		filenametemp = filename;
+		_statusEvent.Reset();
 		status = 7;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE IMAGE " + filename);
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE " + filename);
-			status = 0;
 		}
 		return imgTemp;
 	}
@@ -337,20 +358,15 @@ public class Image
 		}
 		imgTemp = null;
 		datatemp = imageData;
+		_statusEvent.Reset();
 		status = 4;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE IMAGE(FromArray)");
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(FromArray)");
-			status = 0;
 		}
 		return imgTemp;
 	}
@@ -369,20 +385,15 @@ public class Image
 		wtemp = w;
 		htemp = h;
 		transformtemp = transform;
+		_statusEvent.Reset();
 		status = 5;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE IMAGE(FromSrcPart)");
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(FromSrcPart)");
-			status = 0;
 		}
 		return imgTemp;
 	}
@@ -397,20 +408,15 @@ public class Image
 		imgTemp = null;
 		wtemp = w;
 		htemp = h;
+		_statusEvent.Reset();
 		status = 6;
-		int i;
-		for (i = 0; i < 500; i++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				Cout.LogError("TOO LONG FOR CREATE IMAGE(w,h)");
+				status = 0;
 			}
-		}
-		if (i == 500)
-		{
-			Cout.LogError("TOO LONG FOR CREATE IMAGE(w,h)");
-			status = 0;
 		}
 		return imgTemp;
 	}

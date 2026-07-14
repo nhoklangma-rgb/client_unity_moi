@@ -1,0 +1,43 @@
+# File cấu hình Codemagic để tự động build dự án Unity iOS ra file .ipa trên Cloud (Không cần máy Mac)
+# Tài liệu cấu hình chi tiết cho dự án Unity
+
+workflows:
+  unity-ios-build:
+    name: Unity iOS Build Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_co2
+    environment:
+      groups:
+        - unity_credentials # Cấu hình Username, Password, và License của Unity trong Codemagic UI
+      vars:
+        UNITY_PROJECT_PATH: "." # Thư mục chứa dự án Unity
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - target: main
+    scripts:
+      - name: Kích hoạt bản quyền Unity (Activate Unity License)
+        script: |
+          # Codemagic tự động quản lý việc activate thông qua Environment variables (UNITY_SERIAL hoặc UNITY_LIC)
+          echo "Activating Unity..."
+      - name: Biên dịch dự án Unity sang Xcode Project (Unity Build Xcode)
+        script: |
+          # Chạy Unity ở chế độ CLI để build ra Xcode project
+          $UNITY_BIN -batchmode -quit -projectPath $UNITY_PROJECT_PATH -buildTarget iOS -executeMethod BuildScript.PerformBuild
+      - name: Đóng gói dự án Xcode sang file .ipa (Xcode Archive & Export)
+        script: |
+          # Thực hiện build dự án Xcode thành file .ipa thành phẩm
+          cd ios-build
+          xcode-project build-ipa --workspace *.xcworkspace --scheme Unity-iPhone
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - your_email@example.com # Thay thế bằng email của bạn để nhận link tải file .ipa
+        notify:
+          success: true
+          failure: true

@@ -3858,12 +3858,12 @@ public class Effect_End : MainEffect
 		{
 		case 166:
 			tframe++;
-			if (tframe > arrFrame.Length)
+			if (tframe >= arrFrame.Length)
 			{
 				tframe = 0;
 				removeEff();
 			}
-			if (tframe < arrFrame.Length - 1)
+			if (tframe < arrFrame.Length)
 			{
 				CFrame = arrFrame[tframe];
 			}
@@ -6754,6 +6754,7 @@ public class Effect_End : MainEffect
 	public override void removeEff()
 	{
 		isStop = true;
+		isRemove = true;
 		f = -1;
 	}
 

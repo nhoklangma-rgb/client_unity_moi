@@ -28,21 +28,7 @@ public class mSystem
 
 	public const int GOOGLE_PLAY = 7;
 
-	public static void closeBanner()
-	{
-	}
 
-	public static void showBanner()
-	{
-	}
-
-	public static void createAdmob()
-	{
-	}
-
-	public static void checkAdComlete()
-	{
-	}
 
 	public static void paintPopUp2(mGraphics g, int x, int y, int w, int h)
 	{
@@ -133,13 +119,22 @@ public class mSystem
 		return DateTime.Now.Hour;
 	}
 
-	public static void println(object str)
-	{
-	}
-
 	public static void outz(object str)
 	{
-		// Debug.Log(str);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		Debug.Log(str);
+#endif
+	}
+
+	// Kept as thin forwarders - called from CRes, DataSkillEff, LoadMap, etc.
+	public static void println(object str)
+	{
+		outz(str);
+	}
+
+	public static void outloi(object str)
+	{
+		outz(str);
 	}
 
 	public static void gc()
@@ -158,25 +153,9 @@ public class mSystem
 		return array;
 	}
 
-	public static void outloi(object str)
-	{
-	}
-
 	public static void gcc()
 	{
 		Resources.UnloadUnusedAssets();
 		GC.Collect();
-	}
-
-	public static void onConnectOK()
-	{
-	}
-
-	public static void onConnectionFail()
-	{
-	}
-
-	public static void onDisconnected()
-	{
 	}
 }

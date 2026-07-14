@@ -1833,7 +1833,7 @@ public class GlobalService : Cmd_Message
 		send();
 	}
 
-	public void TaiXiu(sbyte type, sbyte action, int tienDatCuoc, sbyte cuaDatCuoc, sbyte isTatTay)
+	public void TaiXiu(sbyte type, sbyte action, long tienDatCuoc, sbyte cuaDatCuoc, sbyte isTatTay)
 	{
 		mSystem.outz("Tai Xiu >>>>>>>>>>> goilen=" + action + " tienDatCuoc = " + tienDatCuoc + " cua = " + cuaDatCuoc);
 		init(80);
@@ -1841,7 +1841,7 @@ public class GlobalService : Cmd_Message
 		{
 			m.writer().writeByte(type);
 			m.writer().writeByte(action);
-			m.writer().writeInt(tienDatCuoc);
+			m.writer().writeLong(tienDatCuoc);
 			m.writer().writeByte(cuaDatCuoc);
 			m.writer().writeByte(isTatTay);
 		}

@@ -14,6 +14,9 @@ public class Session_ME : ISession
 		// ConcurrentQueue is thread-safe and O(1) for enqueue/dequeue (was List with O(n) RemoveAt(0))
 		public ConcurrentQueue<Message> sendingMessage;
 
+		// Event-based signaling: sender thread sleeps until a message is enqueued
+		private ManualResetEventSlim _sendEvent = new ManualResetEventSlim(false);
+
 		public Sender()
 		{
 			sendingMessage = new ConcurrentQueue<Message>();
@@ -22,6 +25,7 @@ public class Session_ME : ISession
 		public void AddMessage(Message message)
 		{
 			sendingMessage.Enqueue(message);
+			_sendEvent.Set();
 		}
 
 		public void run()
@@ -30,6 +34,10 @@ public class Session_ME : ISession
 			{
 				try
 				{
+					// Wait efficiently until a message is enqueued (or timeout to re-check connected flag)
+					_sendEvent.Wait(50);
+					_sendEvent.Reset();
+
 					if (getKeyComplete)
 					{
 						Message msg;
@@ -37,13 +45,6 @@ public class Session_ME : ISession
 						{
 							doSendMessage(msg);
 						}
-					}
-					try
-					{
-						Thread.Sleep(5);
-					}
-					catch (Exception)
-					{
 					}
 				}
 				catch (Exception ex)
@@ -545,6 +546,7 @@ public class Session_ME : ISession
 			}
 			sendThread = null;
 			collectorThread = null;
+			mSystem.gcc(); // Trigger GC on disconnect to free all unused network-related graphics & memory
 		}
 		catch (Exception)
 		{

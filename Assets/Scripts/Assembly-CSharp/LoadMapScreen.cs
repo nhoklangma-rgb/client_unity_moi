@@ -90,6 +90,7 @@ public class LoadMapScreen : MainScreen
 		checkDelInstance();
 		MapGotoSky.isBeginEffBoat = false;
 		isSuperBoss = false;
+		mSystem.gcc(); // Clear memory and trigger GC when transitioning maps
 	}
 
 	private void checkDelInstance()

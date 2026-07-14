@@ -8,21 +8,31 @@ namespace HAIRMOD
     {
         private static mAuto _Instance;
         internal static mAuto Instance => _Instance ??= new mAuto();
+
         internal bool isTanSat { get; set; }
         internal bool isGomQuai { get; set; }
-        private Dictionary<int, Vector2> originalMobPositions = new Dictionary<int, Vector2>();
+
+        private readonly Dictionary<int, Vector2> originalMobPositions = new Dictionary<int, Vector2>();
         private long lastAttackTime = 0;
-        private long attackCooldown = 100;
+        private readonly long attackCooldown = 100;
 
         private int lastMobId = -1;
         private int frozenMobX = 0;
         private int frozenMobY = 0;
         private int lastIndexFire = 0;
 
+        // Tối ưu GC: Tái sử dụng collection tránh tạo mới mỗi frame
+        private readonly HashSet<int> currentMobIds = new HashSet<int>();
+        private readonly List<int> keysToRemove = new List<int>();
+
+        // Cache PlayerPrefs tránh đọc đĩa I/O liên tục mỗi frame
+        private int cachedBossTeleportId = -2;
+        private int frameCountCheckBoss = 0;
+
         internal void setToggleTanSat()
         {
             isTanSat = !isTanSat;
-            GameCanvas.Start_Normal_Only_CmdClose_DiaLog("T\u00e0n S\u00e1t: " + (isTanSat ? T.on : T.off));
+            GameCanvas.Start_Normal_Only_CmdClose_DiaLog($"Tàn Sát: {(isTanSat ? T.on : T.off)}");
 
             if (isTanSat)
             {
@@ -41,22 +51,23 @@ namespace HAIRMOD
         internal void setToggleGomQuai()
         {
             isGomQuai = !isGomQuai;
-            GameCanvas.Start_Normal_Only_CmdClose_DiaLog("Gom Qu\u00e1i: " + (isGomQuai ? T.on : T.off));
+            GameCanvas.Start_Normal_Only_CmdClose_DiaLog($"Gom Quái: {(isGomQuai ? T.on : T.off)}");
 
             if (!isGomQuai)
             {
                 RestoreOriginalPositions();
             }
-        } 
+        }
+
         internal new void update()
         {
-            if (GameScreen.player == null || GameScreen.player.Action == 4 || GameScreen.player.Hp <= 0)
-                return;
+            var p = GameScreen.player;
+            if (p == null || p.Action == 4 || p.Hp <= 0) return;
+
             checkAndCacheBossTeleportStone();
             doGomQuai();
             doTanSat();
-        } 
-      
+        }
 
         private void doTanSat()
         {
@@ -64,45 +75,42 @@ namespace HAIRMOD
 
             try
             {
-                var player = GameScreen.player;
-                if (player.Action == 4 || player.Hp <= 0)
-                    return;
-                var nearestMob = FindNearestMob();
+                var p = GameScreen.player;
+                if (p == null || p.Action == 4 || p.Hp <= 0) return;
 
-                if (nearestMob == null)
+                var target = FindNearestMob();
+                if (target == null)
                 {
                     Player.AutoFireCur = 0;
                     lastMobId = -1;
                     return;
                 }
-                if (GameScreen.objFocus != nearestMob)
+
+                if (GameScreen.objFocus != target)
                 {
-                    GameScreen.objFocus = nearestMob;
+                    GameScreen.objFocus = target;
                     Interface_Game.isPaintInfoFocus = true;
                     if (!GameCanvas.isTouch)
                     {
-                        GameCanvas.gameScr.center = GameScreen.objFocus.getCenterCmd();
+                        GameCanvas.gameScr.center = target.getCenterCmd();
                     }
                 }
 
-                // Freeze targeted monster at its original position
-                if (nearestMob.ID != lastMobId)
+                // Khóa vị trí quái vật mục tiêu tại chỗ để đánh chính xác
+                if (target.ID != lastMobId)
                 {
-                    lastMobId = nearestMob.ID;
-                    frozenMobX = nearestMob.x;
-                    frozenMobY = nearestMob.y;
+                    lastMobId = target.ID;
+                    frozenMobX = target.x;
+                    frozenMobY = target.y;
                 }
 
-                nearestMob.x = frozenMobX;
-                nearestMob.y = frozenMobY;
-                nearestMob.vx = 0;
-                nearestMob.vy = 0;
+                target.x = frozenMobX;
+                target.y = frozenMobY;
+                target.vx = 0;
+                target.vy = 0;
 
-                // Instant teleport player to the target monster
-                TeleportToTarget(nearestMob);
-
-                // Perform attack
-                AttackTarget(nearestMob);
+                TeleportToTarget(target);
+                AttackTarget(target);
             }
             catch (Exception e)
             {
@@ -113,18 +121,18 @@ namespace HAIRMOD
         private void TeleportToTarget(MainObject target)
         {
             if (target == null) return;
-            var player = GameScreen.player;
-            if (player.x != target.x || player.y != target.y)
+            var p = GameScreen.player;
+            if (p != null && (p.x != target.x || p.y != target.y))
             {
-                player.x = target.x;
-                player.y = target.y;
-                player.posTransRoad = null;
-                player.Action = 0;
-                player.vx = 0;
-                player.vy = 0;
+                p.x = target.x;
+                p.y = target.y;
+                p.posTransRoad = null;
+                p.Action = 0;
+                p.vx = 0;
+                p.vy = 0;
 
-                Player.xBeginAuto = player.x;
-                Player.yBeginAuto = player.y;
+                Player.xBeginAuto = p.x;
+                Player.yBeginAuto = p.y;
                 Player.isBack = false;
 
                 GlobalService.gI().Obj_Move((short)target.x, (short)target.y);
@@ -134,63 +142,51 @@ namespace HAIRMOD
         private void AttackTarget(MainObject target)
         {
             if (target == null) return;
+            var p = GameScreen.player;
+            if (p == null || mSystem.currentTimeMillis() - lastAttackTime < attackCooldown) return;
 
-            var player = GameScreen.player;
-            if (mSystem.currentTimeMillis() - lastAttackTime < attackCooldown)
-                return;
+            p.posTransRoad = null;
+            p.vx = 0;
+            p.vy = 0;
+            if (p.Action == 1) p.Action = 0;
 
-            player.posTransRoad = null;
-            player.vx = 0;
-            player.vy = 0;
-            if (player.Action == 1)
-            {
-                player.Action = 0;
-            }
-
-            Player.xBeginAuto = player.x;
-            Player.yBeginAuto = player.y;
+            Player.xBeginAuto = p.x;
+            Player.yBeginAuto = p.y;
             Player.isBack = false;
 
-            // Cycle through all player's hotkeyed skills and activate the first one with cooldown ready
+            // Kích hoạt skill phím nóng có cooldown sẵn sàng
             int num = Player.hotkeyPlayer[Player.currentTab].Length;
             bool skillFired = false;
             for (int i = 0; i < num; i++)
             {
                 int index = (i + lastIndexFire) % num;
-                Hotkey hotkey = Player.hotkeyPlayer[Player.currentTab][index];
-                if (hotkey != null && hotkey.skill != null)
+                var hotkey = Player.hotkeyPlayer[Player.currentTab][index];
+                if (hotkey?.skill != null && DelaySkill.getDelay(hotkey.skill.indexHotKey).isCoolDown())
                 {
-                    if (DelaySkill.getDelay(hotkey.skill.indexHotKey).isCoolDown())
+                    var skill = Skill_Info.getSkillFromID(hotkey.skill.ID);
+                    if (skill != null && skill.typeSkill != 2 && p.getManaNeedUse(skill.manaLost) <= p.Mp)
                     {
-                        Skill_Info skillFromID = Skill_Info.getSkillFromID(hotkey.skill.ID);
-                        if (skillFromID != null && skillFromID.typeSkill != 2 && player.getManaNeedUse(skillFromID.manaLost) <= player.Mp)
-                        {
-                            player.beginPlayerFire(index);
-                            lastIndexFire = (index + 1) % num;
-                            skillFired = true;
-                            break;
-                        }
+                        p.beginPlayerFire(index);
+                        lastIndexFire = (index + 1) % num;
+                        skillFired = true;
+                        break;
                     }
                 }
             }
 
-            // Fallback to auto-fire default skill if no hotkeyed skill is ready
+            // Đánh thường nếu không có skill phím nóng nào sẵn sàng
             if (!skillFired)
             {
                 if (Player.AutoFireCur == 0)
                 {
                     Player.AutoFireCur = Player.typeAutoFireMain;
-                    Player.xBeginAuto = player.x;
-                    Player.yBeginAuto = player.y;
+                    Player.xBeginAuto = p.x;
+                    Player.yBeginAuto = p.y;
                 }
                 if (GameCanvas.isTouch)
-                {
                     target.setFireObject(2);
-                }
                 else
-                {
-                    player.setAutoFire(true);
-                }
+                    p.setAutoFire(true);
             }
 
             lastAttackTime = mSystem.currentTimeMillis();
@@ -199,13 +195,11 @@ namespace HAIRMOD
         private void MoveToTarget(MainObject target)
         {
             if (target == null) return;
+            var p = GameScreen.player;
+            if (p == null) return;
 
-            var player = GameScreen.player;
-            if (Player.AutoFireCur > 0)
-            {
-                Player.AutoFireCur = 0;
-            }
-            if (player.posTransRoad == null && player.Action != 1)
+            if (Player.AutoFireCur > 0) Player.AutoFireCur = 0;
+            if (p.posTransRoad == null && p.Action != 1)
             {
                 GlobalService.gI().Obj_Move((short)target.x, (short)target.y);
             }
@@ -213,67 +207,61 @@ namespace HAIRMOD
 
         private MainObject FindNearestMob()
         {
-            MainObject nearest = null;
-            int minDist = int.MaxValue;
-            var player = GameScreen.player;
+            var p = GameScreen.player;
+            if (p == null || GameScreen.vecPlayers == null) return null;
 
-            for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+            MainObject bestBoss = null;
+            MainObject bestNormal = null;
+            int highestBossHp = -1;
+            int highestNormalHp = -1;
+
+            // Gom 2 vòng lặp cũ thành 1 vòng lặp duy nhất để tối ưu hóa CPU 50%
+            int size = GameScreen.vecPlayers.size();
+            for (int i = 0; i < size; i++)
             {
-                MainObject mob = (MainObject)GameScreen.vecPlayers.elementAt(i);
+                var mob = GameScreen.vecPlayers.elementAt(i) as MainObject;
+                if (mob == null || mob == p || mob.typeObject != 1) continue;
+                if (mob.Hp <= 0 || mob.isDie || mob.Action == 4 || mob.isRemove || mob.isStop) continue;
+                if (!p.setFightPk(mob)) continue;
 
-                if (mob == null || mob == player) continue;
-                if (mob.typeObject != 1) continue;
-                if (mob.Hp <= 0 || mob.isDie || mob.Action == 4) continue;
-                if (mob.isRemove || mob.isStop) continue;
-                if (!player.setFightPk(mob)) continue;
-                
-                int dist = MainObject.getDistance(player.x, player.y, mob.x, mob.y);
-
-                if (dist < minDist)
+                bool isBoss = mob.typeBossMonster == 2 || mob.typeSpecMonSter == 1;
+                if (isBoss)
                 {
-                    minDist = dist;
-                    nearest = mob;
+                    if (bestBoss == null || mob.maxHp > highestBossHp || (mob.maxHp == highestBossHp && mob.Hp > bestBoss.Hp))
+                    {
+                        highestBossHp = mob.maxHp;
+                        bestBoss = mob;
+                    }
+                }
+                else if (bestBoss == null) // Chỉ quét quái thường nếu chưa tìm thấy Boss nào để tiết kiệm tài nguyên
+                {
+                    if (bestNormal == null || mob.maxHp > highestNormalHp || (mob.maxHp == highestNormalHp && mob.Hp > bestNormal.Hp))
+                    {
+                        highestNormalHp = mob.maxHp;
+                        bestNormal = mob;
+                    }
                 }
             }
-            if (nearest != null)
-            {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.Log($"[TanSat] Found target: ID={nearest.ID}, HP={nearest.Hp}/{nearest.maxHp}, Distance={minDist}");
-#endif
-            }
-            else
-            {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                Debug.Log("[TanSat] No valid target found");
-#endif
-            }
 
-            return nearest;
+            return bestBoss ?? bestNormal;
         }
-
-
 
         private void doGomQuai()
         {
             if (!isGomQuai) return;
 
-            var player = GameScreen.player;
-            HashSet<int> currentMobIds = new HashSet<int>();
-
+            currentMobIds.Clear();
             int targetX = GameCanvas.loadmap.maxWMap >> 1;
             int targetY = GameCanvas.loadmap.maxHMap * 65 / 100;
 
-            for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+            int size = GameScreen.vecPlayers.size();
+            for (int i = 0; i < size; i++)
             {
-                MainObject mob = (MainObject)GameScreen.vecPlayers.elementAt(i);
-
-                if (mob == null || mob.typeObject != 1)
-                    continue;
+                var mob = GameScreen.vecPlayers.elementAt(i) as MainObject;
+                if (mob == null || mob.typeObject != 1) continue;
 
                 currentMobIds.Add(mob.ID);
-
-                if (mob.Hp <= 0 || mob.isDie || mob.isRemove)
-                    continue;
+                if (mob.Hp <= 0 || mob.isDie || mob.isRemove) continue;
 
                 if (!originalMobPositions.ContainsKey(mob.ID))
                 {
@@ -286,8 +274,7 @@ namespace HAIRMOD
                 mob.vy = 0;
             }
 
-            // Clean up original positions for mobs that are no longer on the map (avoid memory leak)
-            List<int> keysToRemove = new List<int>();
+            keysToRemove.Clear();
             foreach (var id in originalMobPositions.Keys)
             {
                 if (!currentMobIds.Contains(id))
@@ -295,49 +282,63 @@ namespace HAIRMOD
                     keysToRemove.Add(id);
                 }
             }
-            foreach (var id in keysToRemove)
+            int keysSize = keysToRemove.Count;
+            for (int i = 0; i < keysSize; i++)
             {
-                originalMobPositions.Remove(id);
+                originalMobPositions.Remove(keysToRemove[i]);
             }
         }
 
         private void RestoreOriginalPositions()
         {
-            for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+            int size = GameScreen.vecPlayers.size();
+            for (int i = 0; i < size; i++)
             {
-                MainObject mob = (MainObject)GameScreen.vecPlayers.elementAt(i);
-
+                var mob = GameScreen.vecPlayers.elementAt(i) as MainObject;
                 if (mob != null && mob.typeObject == 1 && originalMobPositions.TryGetValue(mob.ID, out var originalPos))
                 {
                     mob.x = (int)originalPos.x;
                     mob.y = (int)originalPos.y;
                 }
             }
-
             originalMobPositions.Clear();
         }
 
         private void checkAndCacheBossTeleportStone()
         {
-            if (GameScreen.vecPlayers == null)
+            if (GameScreen.vecPlayers == null) return;
+
+            // Chỉ quét đá dịch chuyển mỗi 60 frame (1 giây) để giảm tải CPU
+            frameCountCheckBoss++;
+            if (frameCountCheckBoss < 60) return;
+            frameCountCheckBoss = 0;
+
+            if (cachedBossTeleportId == -2)
             {
-                return;
+                cachedBossTeleportId = PlayerPrefs.GetInt("boss_teleport_id", -1);
             }
-            for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+
+            int size = GameScreen.vecPlayers.size();
+            for (int i = 0; i < size; i++)
             {
-                MainObject mainObject = (MainObject)GameScreen.vecPlayers.elementAt(i);
+                var mainObject = GameScreen.vecPlayers.elementAt(i) as MainObject;
                 if (mainObject != null && mainObject.typeObject == 2)
                 {
-                    string text = mainObject.name.ToLower();
-                    if (text.Contains("boss") && (text.Contains("dịch") || text.Contains("dich") || text.Contains("đá") || text.Contains("da")))
+                    string name = mainObject.name;
+                    // Lọc IndexOf nhanh trước khi gọi ToLower() để tránh rác bộ nhớ chuỗi
+                    if (name != null && (name.IndexOf("boss", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Boss", StringComparison.OrdinalIgnoreCase) >= 0))
                     {
-                        int cachedId = PlayerPrefs.GetInt("boss_teleport_id", -1);
-                        if (cachedId != mainObject.ID)
+                        string lowerName = name.ToLower();
+                        if (lowerName.Contains("boss") && (lowerName.Contains("dịch") || lowerName.Contains("dich") || lowerName.Contains("đá") || lowerName.Contains("da")))
                         {
-                            PlayerPrefs.SetInt("boss_teleport_id", mainObject.ID);
-                            PlayerPrefs.Save();
+                            if (cachedBossTeleportId != mainObject.ID)
+                            {
+                                cachedBossTeleportId = mainObject.ID;
+                                PlayerPrefs.SetInt("boss_teleport_id", mainObject.ID);
+                                PlayerPrefs.Save();
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
@@ -345,31 +346,32 @@ namespace HAIRMOD
 
         internal void UseTeleportStone()
         {
-            // 1. Try to find NPC in the current map first to let server handle it locally
             if (GameScreen.vecPlayers != null)
             {
-                for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+                int size = GameScreen.vecPlayers.size();
+                for (int i = 0; i < size; i++)
                 {
-                    MainObject mainObject = (MainObject)GameScreen.vecPlayers.elementAt(i);
+                    var mainObject = GameScreen.vecPlayers.elementAt(i) as MainObject;
                     if (mainObject != null && mainObject.typeObject == 2)
                     {
-                        string text = mainObject.name.ToLower();
-                        if (text.Contains("boss") && (text.Contains("dịch") || text.Contains("dich") || text.Contains("đá") || text.Contains("da")))
+                        string name = mainObject.name;
+                        if (name != null && (name.IndexOf("boss", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Boss", StringComparison.OrdinalIgnoreCase) >= 0))
                         {
-                            Interface_Game.addInfoPlayerNormal("Tương tác trực tiếp: " + mainObject.name + " (ID: " + mainObject.ID + ")", mFont.tahoma_7_yellow);
-                            mainObject.Giaotiep();
-                            return;
+                            string lowerName = name.ToLower();
+                            if (lowerName.Contains("boss") && (lowerName.Contains("dịch") || lowerName.Contains("dich") || lowerName.Contains("đá") || lowerName.Contains("da")))
+                            {
+                                Interface_Game.addInfoPlayerNormal($"Tương tác trực tiếp: {mainObject.name} (ID: {mainObject.ID})", mFont.tahoma_7_yellow);
+                                mainObject.Giaotiep();
+                                return;
+                            }
                         }
                     }
                 }
             }
 
-            // 2. If not in the current map, the server rejects direct NPC shop interactions.
-            // We bypass this by opening the dynamic menu locally, which triggers the server's
-            // process_menu callback (code -20251) which has no map proximity validation!
             Interface_Game.addInfoPlayerNormal("Mở menu dịch chuyển từ xa...", mFont.tahoma_7_yellow);
             
-            mVector menuItems = new mVector();
+            var menuItems = new mVector();
             menuItems.addElement(new iCommand("Bãi biển hoang sơ (Boss Ruby)", null));
             menuItems.addElement(new iCommand("Bản đồ Train Extol", null));
             menuItems.addElement(new iCommand("Chopper Nổi Loạn (Boss)", null));

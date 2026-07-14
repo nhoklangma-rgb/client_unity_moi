@@ -1752,24 +1752,49 @@ public class Player : MainPlayer
 		{
 			return;
 		}
-		int num = wFocus * 3 / 2;
-		MainObject mainObject = null;
+		
+		MainObject bestTarget = null;
+		int highestHp = -1;
+		bool foundBoss = false;
+		
+		// 1. Tìm Boss hoặc Siêu Trùm có HP cao nhất trong map (không giới hạn khoảng cách)
 		for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
 		{
 			MainObject mainObject2 = (MainObject)GameScreen.vecPlayers.elementAt(i);
-			if (mainObject2 != null && mainObject2.Action != 4 && !mainObject2.isSend && mainObject2.typeObject != 10 && mainObject2.typeObject == 1)
+			if (mainObject2 != null && mainObject2.Action != 4 && !mainObject2.isSend && mainObject2.typeObject == 1 && mainObject2.Hp > 0)
 			{
-				int distance = MainObject.getDistance(x, y, mainObject2.x, mainObject2.y);
-				if (distance < num)
+				if (mainObject2.typeBossMonster == 2 || mainObject2.typeSpecMonSter == 1)
 				{
-					num = distance;
-					mainObject = mainObject2;
+					if (bestTarget == null || mainObject2.maxHp > highestHp)
+					{
+						highestHp = mainObject2.maxHp;
+						bestTarget = mainObject2;
+						foundBoss = true;
+					}
 				}
 			}
 		}
-		if (mainObject != null)
+		
+		// 2. Nếu không có Boss/Siêu Trùm, tìm quái thường có HP tối đa (maxHp) cao nhất trong map
+		if (!foundBoss)
 		{
-			GameScreen.objFocus = mainObject;
+			for (int i = 0; i < GameScreen.vecPlayers.size(); i++)
+			{
+				MainObject mainObject2 = (MainObject)GameScreen.vecPlayers.elementAt(i);
+				if (mainObject2 != null && mainObject2.Action != 4 && !mainObject2.isSend && mainObject2.typeObject == 1 && mainObject2.Hp > 0)
+				{
+					if (bestTarget == null || mainObject2.maxHp > highestHp)
+					{
+						highestHp = mainObject2.maxHp;
+						bestTarget = mainObject2;
+					}
+				}
+			}
+		}
+		
+		if (bestTarget != null)
+		{
+			GameScreen.objFocus = bestTarget;
 			demUnFire = 0;
 		}
 		else

@@ -16,6 +16,9 @@ public class DataInputStream
 
 	private static string filenametemp;
 
+	// Event-based signaling instead of Thread.Sleep polling
+	private static ManualResetEventSlim _statusEvent = new ManualResetEventSlim(false);
+
 	public DataInputStream(ByteArrayInputStream bis)
 	{
 		r = new myReader(bis.data);
@@ -34,6 +37,7 @@ public class DataInputStream
 			status = 1;
 			istemp = __getResourceAsStream(filenametemp);
 			status = 0;
+			_statusEvent.Set();
 		}
 	}
 
@@ -46,37 +50,28 @@ public class DataInputStream
 	{
 		if (status != 0)
 		{
-			for (int i = 0; i < 500; i++)
+			_statusEvent.Reset();
+			if (!_statusEvent.Wait(2500))
 			{
-				Thread.Sleep(5);
-				if (status == 0)
+				if (status != 0)
 				{
-					break;
+					// Debug.Log("CANNOT GET INPUTSTREAM " + filename + " WHEN GETTING " + filenametemp);
+					return null;
 				}
-			}
-			if (status != 0)
-			{
-				// Debug.Log("CANNOT GET INPUTSTREAM " + filename + " WHEN GETTING " + filenametemp);
-				return null;
 			}
 		}
 		istemp = null;
 		filenametemp = filename;
+		_statusEvent.Reset();
 		status = 2;
-		int j;
-		for (j = 0; j < 500; j++)
+		if (!_statusEvent.Wait(2500))
 		{
-			Thread.Sleep(5);
-			if (status == 0)
+			if (status != 0)
 			{
-				break;
+				// Debug.Log("TOO LONG FOR CREATE INPUTSTREAM " + filename);
+				status = 0;
+				return null;
 			}
-		}
-		if (j == 500)
-		{
-			// Debug.Log("TOO LONG FOR CREATE INPUTSTREAM " + filename);
-			status = 0;
-			return null;
 		}
 		return istemp;
 	}

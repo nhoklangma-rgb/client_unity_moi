@@ -9,13 +9,27 @@ public class ScaleGUI
 
 	public static float HEIGHT;
 
+	public static float OFFSET_X;
+
+	public static float OFFSET_Y;
+
 	private static List<Matrix4x4> stack = new List<Matrix4x4>();
 
 	public static void initScaleGUI()
 	{
 		Cout.println("Init Scale GUI: Screen.w=" + Screen.width + " Screen.h=" + Screen.height);
+		OFFSET_X = 0f;
+		OFFSET_Y = 0f;
 		WIDTH = Screen.width;
 		HEIGHT = Screen.height;
+#if UNITY_IOS
+		Rect safeArea = Screen.safeArea;
+		if (safeArea.width > 0f && safeArea.height > 0f)
+		{
+			OFFSET_X = safeArea.x;
+			OFFSET_Y = Screen.height - safeArea.yMax;
+		}
+#endif
 		scaleScreen = false;
 		_ = Screen.width;
 		_ = 1200;
@@ -65,5 +79,32 @@ public class ScaleGUI
 		}
 		y = y * HEIGHT / (float)Screen.height;
 		return y;
+	}
+	public static int toGameX(float screenX)
+	{
+		float x = screenX;
+		if (x < 0f)
+		{
+			x = 0f;
+		}
+		if (x > WIDTH)
+		{
+			x = WIDTH;
+		}
+		return (int)(x / (float)mGraphics.zoomLevel);
+	}
+
+	public static int toGameY(float screenYFromBottom)
+	{
+		float y = Screen.height - screenYFromBottom;
+		if (y < 0f)
+		{
+			y = 0f;
+		}
+		if (y > HEIGHT)
+		{
+			y = HEIGHT;
+		}
+		return (int)(y / (float)mGraphics.zoomLevel) + mGraphics.addYWhenOpenKeyBoard;
 	}
 }

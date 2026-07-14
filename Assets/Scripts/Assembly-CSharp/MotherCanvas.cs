@@ -67,6 +67,10 @@ public class MotherCanvas
 		{
 			mGraphics.zoomLevel = 1;
 		}
+		int maxZoomByWidth = width / 240;
+		int maxZoomByHeight = height / 160;
+		int maxSafeZoom = Math.max(1, Math.min(maxZoomByWidth, maxZoomByHeight));
+		mGraphics.zoomLevel = Math.max(1, Math.min(mGraphics.zoomLevel, Math.min(4, maxSafeZoom)));
 		w = (width + mGraphics.zoomLevel - 1) / mGraphics.zoomLevel;
 		h = (height + mGraphics.zoomLevel - 1) / mGraphics.zoomLevel;
 		hw = w / 2;

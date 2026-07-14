@@ -11571,6 +11571,10 @@ public class Effect_Skill : MainEffect
 
 	public override void removeEff()
 	{
+		if (objFireMain != null)
+		{
+			objFireMain.isTanHinh = false;
+		}
 		if (objFireMain == GameScreen.player && GameScreen.typePaintGameScreen == 1)
 		{
 			GameScreen.isPaintNormal();
@@ -11582,6 +11586,7 @@ public class Effect_Skill : MainEffect
 		VecEff.removeAllElements();
 		VecSubEff.removeAllElements();
 		isStop = true;
+		isRemove = true;
 		f = -1;
 	}
 

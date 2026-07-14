@@ -164,8 +164,8 @@ public class GameCanvas : MotherCanvas, IActionListener
 
 	public static string[][] strListServer = new string[2][]
 	{
-		new string[3] { "Hải tặc free", "Hải tặc mũ rơm", "Localhost" },
-		new string[3] { "Hải tặc free", "Hải tặc mũ rơm", "Localhost" }
+		new string[2] { "Hải tặc mũ rơm", "Server Admin" },
+		new string[2] { "Hải tặc mũ rơm", "Server Admin" }
 	};
 
 	public static int IndexServer = 0;
@@ -592,19 +592,14 @@ public class GameCanvas : MotherCanvas, IActionListener
 	{
 		isLoadImage = false;
 		Session_ME.gI().setHandler(GlobalMessageHandler.gI());
-		int num = 2239;
+		int num = 2240;
 		string text = "14.225.203.159";
 		if (IndexServer == 0)
 		{
 			text = "14.225.203.159";
-			num = 2239;
-		}
-		else if (IndexServer == 1)
-		{
-			text = "14.225.203.159";
 			num = 2240;
 		}
-		else if (IndexServer == 2)
+		else if (IndexServer == 1)
 		{
 			text = "127.0.0.1";
 			num = 2240;
@@ -612,7 +607,7 @@ public class GameCanvas : MotherCanvas, IActionListener
 		else
 		{
 			text = "14.225.203.159";
-			num = 2239;
+			num = 2240;
 		}
 		string[] array = null;
 		try
@@ -639,19 +634,14 @@ public class GameCanvas : MotherCanvas, IActionListener
 	{
 		isLoadImage = true;
 		Session_ME.gI().setHandler(GlobalMessageHandler.gI());
-		int num = 2239;
+		int num = 2240;
 		string text = "14.225.203.159";
 		if (IndexServer == 0)
 		{
 			text = "14.225.203.159";
-			num = 2239;
-		}
-		else if (IndexServer == 1)
-		{
-			text = "14.225.203.159";
 			num = 2240;
 		}
-		else if (IndexServer == 2)
+		else if (IndexServer == 1)
 		{
 			text = "127.0.0.1";
 			num = 2240;
@@ -659,7 +649,7 @@ public class GameCanvas : MotherCanvas, IActionListener
 		else
 		{
 			text = "14.225.203.159";
-			num = 2239;
+			num = 2240;
 		}
 		string[] array = null;
 		try

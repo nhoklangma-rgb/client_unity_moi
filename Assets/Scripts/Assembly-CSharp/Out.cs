@@ -5,11 +5,15 @@ public class Out
 {
 	public static void printLine(string text)
 	{
-		// Debug.Log("aaa: " + text);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		Debug.Log("aaa: " + text);
+#endif
 	}
 
 	public static void printError(Exception e)
 	{
-		// Debug.Log(e);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+		Debug.LogError(e);
+#endif
 	}
 }

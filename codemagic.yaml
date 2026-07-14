@@ -25,14 +25,31 @@ workflows:
           cd com.unity.services.vivox/Plugins/iOS
           cat libvivoxsdk.a.part* > libvivoxsdk.a
           rm libvivoxsdk.a.part*
-      - name: Đóng gói dự án Xcode sang file .ipa (Xcode Archive & Export)
+      - name: Biên dịch Xcode không cần Chứng chỉ Apple (Build Xcode Unsigned)
         script: |
           cd ios_build
           
-          # Thực hiện build dự án Xcode thành file .ipa thành phẩm
-          xcode-project build-ipa --project Unity-iPhone.xcodeproj --scheme Unity-iPhone
+          # Thực hiện compile dự án Xcode và tắt tính năng yêu cầu chứng chỉ ký app của Apple
+          xcodebuild -project Unity-iPhone.xcodeproj \
+                     -scheme Unity-iPhone \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     CONFIGURATION_BUILD_DIR=../build \
+                     CODE_SIGNING_ALLOWED=NO \
+                     CODE_SIGNING_REQUIRED=NO \
+                     CODE_SIGN_IDENTITY="" \
+                     PROVISIONING_PROFILE="" \
+                     clean build
+      - name: Đóng gói thư mục .app thành file .ipa chạy thử (Package IPA)
+        script: |
+          # Tạo cấu trúc thư mục IPA tiêu chuẩn (Payload/)
+          mkdir -p Payload
+          cp -r build/Unity-iPhone.app Payload/
+          
+          # Nén Payload thành file .ipa chạy thử cho Sideloadly
+          zip -r HaiTacMuRom_Unsigned.ipa Payload
     artifacts:
-      - build/ios/ipa/*.ipa
+      - "*.ipa"
     publishing:
       email:
         recipients:

@@ -1,0 +1,11 @@
+# Chặn Git tự động thay đổi định dạng dòng (autocrlf) đối với các file nhị phân của Xcode/Unity, tránh làm hỏng file .a và .dylib
+*.a binary
+*.dylib binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.mp3 binary
+*.wav binary
+*.asset binary
+*.meta -text

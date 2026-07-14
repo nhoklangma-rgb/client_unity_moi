@@ -61,8 +61,8 @@ workflows:
           rm -rf Payload
           mkdir -p Payload
           
-          # Sao chép file .app thực thi vào Payload
-          cp -r build/Unity-iPhone.app Payload/
+          # Sao chép tự động bất kỳ tệp tin .app nào được sinh ra (Tránh lỗi do đổi Product Name game)
+          cp -r build/*.app Payload/
           
           # Nén Payload thành file .ipa chạy thử cho Sideloadly
           rm -f *.ipa

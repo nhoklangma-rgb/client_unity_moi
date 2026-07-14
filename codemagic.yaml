@@ -33,27 +33,27 @@ workflows:
         script: |
           cd ios_build
           
-          # Đảm bảo dọn dẹp thư mục build cũ
+          # Dọn dẹp thư mục build cũ
           rm -rf ../build
           mkdir -p ../build
           
           # Lấy đường dẫn tuyệt đối cho thư mục build
           ABSOLUTE_BUILD_DIR="$(pwd)/../build"
           
-          # Thực hiện compile dự án Xcode và xuất trực tiếp vào thư mục build tuyệt đối
+          # Thực hiện compile sử dụng chữ ký tự sinh Ad-hoc ("-") để vượt qua rào cản của Dynamic Framework (UnityFramework.framework)
           xcodebuild -project Unity-iPhone.xcodeproj \
                      -scheme Unity-iPhone \
                      -configuration Release \
                      -sdk iphoneos \
                      CONFIGURATION_BUILD_DIR="$ABSOLUTE_BUILD_DIR" \
-                     CODE_SIGNING_ALLOWED=NO \
-                     CODE_SIGNING_REQUIRED=NO \
-                     CODE_SIGN_IDENTITY="" \
-                     PROVISIONING_PROFILE="" \
+                     CODE_SIGN_IDENTITY="-" \
+                     CODE_SIGNING_REQUIRED=YES \
+                     CODE_SIGNING_ALLOWED=YES \
+                     AD_HOC_CODE_SIGNING_ALLOWED=YES \
                      clean build
       - name: Đóng gói thư mục .app thành file .ipa chạy thử (Package IPA)
         script: |
-          # In danh sách file để kiểm tra và xác thực đường dẫn trong log
+          # Kiểm tra thư mục build sản phẩm
           echo "=== Danh sach file trong thu muc build ==="
           ls -la build/
           

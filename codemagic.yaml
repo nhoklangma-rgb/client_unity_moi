@@ -19,24 +19,33 @@ workflows:
           # Ghép lại file thư viện lõi của Unity theo đúng thứ tự số học (0, 1, 2, 3, 4)
           cd ios_build/Libraries
           rm -f libiPhone-lib.a
-          for i in {0..4}; do cat libiPhone-lib.a.part$i >> libiPhone-lib.a; done
+          for i in {0..4}; do cat libiPhone-lib.a.part$i >> libiPhone-lib.a
+          done
           rm libiPhone-lib.a.part*
           
           # Ghép lại file thư viện Vivox theo đúng thứ tự số học (0 đến 18)
           cd com.unity.services.vivox/Plugins/iOS
           rm -f libvivoxsdk.a
-          for i in {0..18}; do cat libvivoxsdk.a.part$i >> libvivoxsdk.a; done
+          for i in {0..18}; do cat libvivoxsdk.a.part$i >> libvivoxsdk.a
+          done
           rm libvivoxsdk.a.part*
       - name: Biên dịch Xcode không cần Chứng chỉ Apple (Build Xcode Unsigned)
         script: |
           cd ios_build
           
-          # Thực hiện compile dự án Xcode và tắt tính năng yêu cầu chứng chỉ ký app của Apple
+          # Đảm bảo dọn dẹp thư mục build cũ
+          rm -rf ../build
+          mkdir -p ../build
+          
+          # Lấy đường dẫn tuyệt đối cho thư mục build
+          ABSOLUTE_BUILD_DIR="$(pwd)/../build"
+          
+          # Thực hiện compile dự án Xcode và xuất trực tiếp vào thư mục build tuyệt đối
           xcodebuild -project Unity-iPhone.xcodeproj \
                      -scheme Unity-iPhone \
                      -configuration Release \
                      -sdk iphoneos \
-                     CONFIGURATION_BUILD_DIR=../build \
+                     CONFIGURATION_BUILD_DIR="$ABSOLUTE_BUILD_DIR" \
                      CODE_SIGNING_ALLOWED=NO \
                      CODE_SIGNING_REQUIRED=NO \
                      CODE_SIGN_IDENTITY="" \
@@ -44,11 +53,19 @@ workflows:
                      clean build
       - name: Đóng gói thư mục .app thành file .ipa chạy thử (Package IPA)
         script: |
+          # In danh sách file để kiểm tra và xác thực đường dẫn trong log
+          echo "=== Danh sach file trong thu muc build ==="
+          ls -la build/
+          
           # Tạo cấu trúc thư mục IPA tiêu chuẩn (Payload/)
+          rm -rf Payload
           mkdir -p Payload
+          
+          # Sao chép file .app thực thi vào Payload
           cp -r build/Unity-iPhone.app Payload/
           
           # Nén Payload thành file .ipa chạy thử cho Sideloadly
+          rm -f *.ipa
           zip -r HaiTacMuRom_Unsigned.ipa Payload
     artifacts:
       - "*.ipa"
